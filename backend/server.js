@@ -15,12 +15,23 @@ app.get('/', (req, res) => {
   res.json({
     message: 'ASR Model Evaluation API',
     version: '1.0.0',
-    docs: '/api-docs'
+    docs: '/docs'
   });
 });
 
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy' });
+});
+
+app.get('/docs', (req, res) => {
+  res.json({
+    endpoints: [
+      { method: 'GET', path: '/api/asr/models', description: 'Get all ASR models' },
+      { method: 'GET', path: '/api/datasets', description: 'Get all datasets' },
+      { method: 'GET', path: '/api/analytics/summary', description: 'Get analytics summary' },
+      { method: 'GET', path: '/api/operations/queue', description: 'Get processing queue' }
+    ]
+  });
 });
 
 // ASR Routes

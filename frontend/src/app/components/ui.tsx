@@ -1,3 +1,4 @@
+import { Slot } from "@radix-ui/react-slot";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -13,7 +14,20 @@ export function Card({ className, children, ...props }: React.HTMLAttributes<HTM
   );
 }
 
-export function Button({ className, variant = "default", size = "default", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "default" | "secondary" | "danger" | "ghost", size?: "default" | "sm" }) {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "secondary" | "danger" | "ghost";
+  size?: "default" | "sm";
+  asChild?: boolean;
+}
+
+export function Button({ 
+  className, 
+  variant = "default", 
+  size = "default", 
+  asChild = false, 
+  ...props 
+}: ButtonProps) {
+  const Comp = asChild ? Slot : "button";
   const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50";
   const variants = {
     default: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm",
@@ -25,8 +39,12 @@ export function Button({ className, variant = "default", size = "default", ...pr
     default: "h-9 px-4 py-2 text-sm",
     sm: "h-8 px-3 text-xs",
   };
+  
   return (
-    <button className={cn(baseStyles, variants[variant], sizes[size], className)} {...props} />
+    <Comp 
+      className={cn(baseStyles, variants[variant], sizes[size], className)} 
+      {...props} 
+    />
   );
 }
 

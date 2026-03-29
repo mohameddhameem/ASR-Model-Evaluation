@@ -496,51 +496,85 @@ export function OperationsDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                {backendQueue.map(job => (
-                  <tr 
-                    key={job.job_id} 
-                    onClick={() => job.status === "completed" && setActiveFileId(job.job_id)}
-                    className={cn(
-                      "group transition-colors",
-                      activeFileId === job.job_id ? "bg-indigo-50 dark:bg-indigo-900/20" : "hover:bg-slate-50 dark:hover:bg-slate-900/30",
-                      job.status === "completed" && "cursor-pointer",
-                      job.status !== "completed" && "cursor-default"
-                    )}
-                  >
-                    <td className="p-3 text-center">
-                      <button className="text-slate-300 dark:text-slate-600 hover:text-indigo-500 transition-colors">
-                        <Square size={16} />
-                      </button>
-                    </td>
-                    <td className="p-3">
-                      <div className="font-medium text-slate-900 dark:text-slate-200 truncate max-w-[150px]" title={job.filename}>
-                        {job.filename}
-                      </div>
-                      <div className="text-[10px] text-slate-500">{new Date(job.created_at).toLocaleDateString()}</div>
-                    </td>
-                    <td className="p-3">
-                      <span className="uppercase text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
-                        {job.language}
-                      </span>
-                    </td>
-                    <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">
-                      {job.duration || "-"}
-                    </td>
-                    <td className="p-3 text-slate-600 dark:text-slate-400">
-                      {job.speakers_detected || "-"}
-                    </td>
-                    <td className="p-3">
-                      {job.status === "queued" && <Badge className="bg-slate-100 dark:bg-slate-800 text-[10px]">Queued</Badge>}
-                      {job.status === "processing" && (
-                        <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 text-[10px]">
-                          {job.progress}%
-                        </Badge>
-                      )}
-                      {job.status === "completed" && <Badge className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 text-[10px]">Done</Badge>}
-                    </td>
-                  </tr>
-                ))}
-                {backendQueue.length === 0 && (
+                {/* Combined and Filtered List */}
+                {[...backendQueue, ...stagedFiles]
+                  .filter(item => {
+                    const itemDate = (item.upload_time || item.uploadDate || item.created_at || "").split('T')[0];
+                    if (dateFilter && itemDate !== dateFilter) return false;
+                    
+                    const itemLang = item.language || item.results?.language;
+                    if (langFilter !== "all" && itemLang !== langFilter) return false;
+                    
+                    return true;
+                  })
+                  .map(item => {
+                    const isJob = 'job_id' in item;
+                    const id = isJob ? item.job_id : item.id;
+                    const name = isJob ? item.filename : item.name;
+                    const status = item.status;
+                    const language = isJob ? item.language : (item.results?.language || "auto");
+                    const duration = isJob ? item.duration : (item.results?.duration || "-");
+                    const date = item.upload_time || item.uploadDate || item.created_at 
+                      ? new Date(item.upload_time || item.uploadDate || item.created_at).toLocaleDateString()
+                      : "Unknown";
+                    
+                    return (
+                      <tr 
+                        key={id} 
+                        onClick={() => status === "completed" && setActiveFileId(id)}
+                        className={cn(
+                          "group transition-colors",
+                          activeFileId === id ? "bg-indigo-50 dark:bg-indigo-900/20" : "hover:bg-slate-50 dark:hover:bg-slate-900/30",
+                          status === "completed" && "cursor-pointer",
+                          status !== "completed" && "cursor-default"
+                        )}
+                      >
+                        <td className="p-3 text-center">
+                          {!isJob ? (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); toggleSelection(id); }}
+                              className="text-slate-400 hover:text-indigo-600 transition-colors"
+                            >
+                              {selectedStagedIds.has(id) ? <CheckSquare size={16} className="text-indigo-600" /> : <Square size={16} />}
+                            </button>
+                          ) : (
+                            <div className="flex justify-center text-slate-300 dark:text-slate-700">
+                              <Square size={16} className="opacity-50" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <div className="font-medium text-slate-900 dark:text-slate-200 truncate max-w-[150px]" title={name}>
+                            {name}
+                          </div>
+                          <div className="text-[10px] text-slate-500">{date}</div>
+                        </td>
+                        <td className="p-3">
+                          <span className="uppercase text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
+                            {language}
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                          {duration}
+                        </td>
+                        <td className="p-3 text-slate-600 dark:text-slate-400">
+                          {isJob ? (item.speakers || "-") : (item.results?.numSpeakers || "-")}
+                        </td>
+                        <td className="p-3">
+                          {status === "queued" && <Badge className="bg-slate-100 dark:bg-slate-800 text-[10px]">Queued</Badge>}
+                          {status === "idle" && <Badge className="bg-slate-100 dark:bg-slate-800 text-[10px]">Ready</Badge>}
+                          {status === "processing" && (
+                            <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 text-[10px]">
+                              {item.progress || 0}%
+                            </Badge>
+                          )}
+                          {status === "completed" && <Badge className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 text-[10px]">Done</Badge>}
+                        </td>
+                      </tr>
+                    );
+                  })
+                }
+                {backendQueue.length === 0 && stagedFiles.length === 0 && (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-slate-500 text-sm">
                       No files match the current queue or filters.
