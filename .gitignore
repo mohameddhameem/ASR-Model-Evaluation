@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Development
+.vite/
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+.sublime-project
+.sublime-workspace
+*.code-workspace
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.md~
+.cache/
+.parcel-cache
+.eslintcache

@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { Mic, Headphones, BarChart2, Globe, Menu, ChevronLeft, Bot, Sun, Moon, Settings as SettingsIcon, User, BrainCircuit, ServerCog, Database } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "./ui";
 import { DatasetSidebar } from "./DatasetSidebar";
@@ -73,6 +73,39 @@ export function Layout() {
   const [datasets, setDatasets] = useState<DatasetItem[]>(INITIAL_DATASETS);
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>("ds-001");
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(INITIAL_PREFERENCES);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch datasets from backend on mount
+  useEffect(() => {
+    const fetchDatasets = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/datasets");
+        if (response.ok) {
+          const backendDatasets = await response.json();
+          const mappedDatasets = backendDatasets.map((ds: any, index: number) => ({
+            id: `ds-${index + 1}`,
+            name: ds.name || `Dataset ${index + 1}`,
+            url: "",
+            type: "audio",
+            duration: ds.duration || "unknown",
+            transcriptionVerified: false,
+            lidVerified: false,
+            detectedLanguage: ds.language || "unknown",
+            uploadDate: new Date().toISOString()
+          }));
+          setDatasets(mappedDatasets);
+          setActiveDatasetId(mappedDatasets[0]?.id || null);
+        }
+      } catch (error) {
+        console.warn("Failed to fetch datasets from backend, using local data:", error);
+        // Fall back to initial data
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDatasets();
+  }, []);
   
   const addDatasetItem = (item: DatasetItem) => {
     setDatasets((prev) => [item, ...prev]);

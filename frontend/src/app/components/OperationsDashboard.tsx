@@ -42,74 +42,90 @@ export function OperationsDashboard() {
   const [dateFilter, setDateFilter] = useState("");
   const [langFilter, setLangFilter] = useState("all");
 
-  // Initialize backend queue with mock data
-  useEffect(() => {
-    const mockQueue = [
-      {
-        job_id: "job-001",
-        filename: "conference-audio-2026-03-15.mp4",
-        language: "en",
-        duration: "12:45",
-        speakers: 3,
-        status: "completed",
-        confidence: 0.92,
-        date: "2026-03-29",
-        upload_time: "2026-03-29T10:30:00Z"
-      },
-      {
-        job_id: "job-002",
-        filename: "meeting-transcription.wav",
-        language: "fr",
-        duration: "8:30",
-        speakers: 2,
-        status: "completed",
-        confidence: 0.88,
-        date: "2026-03-29",
-        upload_time: "2026-03-29T11:15:00Z"
-      },
-      {
-        job_id: "job-003",
-        filename: "interview-segment.mp3",
-        language: "de",
-        duration: "15:20",
-        speakers: 2,
-        status: "processing",
-        confidence: null,
-        date: "2026-03-29",
-        upload_time: "2026-03-29T12:00:00Z"
-      },
-      {
-        job_id: "job-004",
-        filename: "lecture-hall-recording.m4a",
-        language: "zh",
-        duration: "45:00",
-        speakers: 1,
-        status: "completed",
-        confidence: 0.95,
-        date: "2026-03-29",
-        upload_time: "2026-03-29T14:30:00Z"
-      },
-      {
-        job_id: "job-005",
-        filename: "podcast-episode-42.mp3",
-        language: "en",
-        duration: "32:15",
-        speakers: 2,
-        status: "completed",
-        confidence: 0.91,
-        date: "2026-03-29",
-        upload_time: "2026-03-29T16:00:00Z"
-      }
-    ];
-    setBackendQueue(mockQueue);
-  }, []);
-
   // Job specific configuration
   const [jobConfig, setJobConfig] = useState({
     asrModel: userPreferences.asrModel,
     lidModel: userPreferences.lidModel,
     targetLanguage: "auto"
   });
+
+  // Fetch processing queue from backend with mock fallback
+  useEffect(() => {
+    const fetchQueue = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/operations/queue");
+        if (response.ok) {
+          const data = await response.json();
+          setBackendQueue(data);
+          return;
+        }
+      } catch (error) {
+        console.warn("Failed to fetch processing queue from backend:", error);
+      }
+      
+      // Fallback: use mock data
+      const mockQueue = [
+        {
+          job_id: "job-001",
+          filename: "conference-audio-2026-03-15.mp4",
+          language: "en",
+          duration: "12:45",
+          speakers: 3,
+          status: "completed",
+          confidence: 0.92,
+          date: "2026-03-29",
+          upload_time: "2026-03-29T10:30:00Z"
+        },
+        {
+          job_id: "job-002",
+          filename: "meeting-transcription.wav",
+          language: "fr",
+          duration: "8:30",
+          speakers: 2,
+          status: "completed",
+          confidence: 0.88,
+          date: "2026-03-29",
+          upload_time: "2026-03-29T11:15:00Z"
+        },
+        {
+          job_id: "job-003",
+          filename: "interview-segment.mp3",
+          language: "de",
+          duration: "15:20",
+          speakers: 2,
+          status: "processing",
+          confidence: null,
+          date: "2026-03-29",
+          upload_time: "2026-03-29T12:00:00Z"
+        },
+        {
+          job_id: "job-004",
+          filename: "lecture-hall-recording.m4a",
+          language: "zh",
+          duration: "45:00",
+          speakers: 1,
+          status: "completed",
+          confidence: 0.95,
+          date: "2026-03-29",
+          upload_time: "2026-03-29T14:30:00Z"
+        },
+        {
+          job_id: "job-005",
+          filename: "podcast-episode-42.mp3",
+          language: "en",
+          duration: "32:15",
+          speakers: 2,
+          status: "completed",
+          confidence: 0.91,
+          date: "2026-03-29",
+          upload_time: "2026-03-29T16:00:00Z"
+        }
+      ];
+      setBackendQueue(mockQueue);
+    };
+    
+    fetchQueue();
+  }, []);
 
   // Sync if global preferences change while idle
   useEffect(() => {
@@ -288,25 +304,20 @@ export function OperationsDashboard() {
     return true;
   });
 
-  // Filter backend queue items with same criteria
-  const filteredBackendQueue = backendQueue.filter(job => {
-    // Check Date - extract date from job (format: "2026-03-29")
-    if (dateFilter) {
-      const jobDate = job.date || job.upload_time?.split('T')[0] || "2026-03-29";
-      if (jobDate !== dateFilter) return false;
-    }
-    // Check Lang
-    if (langFilter !== "all") {
-      if (job.language !== langFilter) return false;
-    }
-    return true;
-  });
-
-  // Combined queue for display
-  const queueItems = [...filteredFiles, ...filteredBackendQueue];
-
-  const activeFileData = stagedFiles.find(f => f.id === activeFileId) ||
+  const activeFileData = stagedFiles.find(f => f.id === activeFileId) || 
                          backendQueue.find(j => j.job_id === activeFileId);
+
+  // Combine backend queue with staged files for display
+  const allFiles = backendQueue;
+  const totalFiles = stagedFiles.length + backendQueue.length;
+  const processingFiles = stagedFiles.filter(f => f.status === "processing").length + 
+                         backendQueue.filter(j => j.status === "processing").length;
+  const completedFiles = stagedFiles.filter(f => f.status === "completed").length + 
+                        backendQueue.filter(j => j.status === "completed").length;
+  const avgConfidence = backendQueue.filter(j => j.confidence !== null).length > 0
+    ? (backendQueue.filter(j => j.confidence !== null).reduce((sum: number, j: any) => sum + j.confidence, 0) / 
+       backendQueue.filter(j => j.confidence !== null).length).toFixed(3)
+    : "N/A";
 
   return (
     <div className="max-w-screen-2xl mx-auto h-[calc(100vh-8rem)] flex flex-col gap-4">
@@ -314,25 +325,25 @@ export function OperationsDashboard() {
       <div className="grid grid-cols-4 gap-4 shrink-0">
         <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Total Files</div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{stagedFiles.length}</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{totalFiles}</div>
           <div className="text-xs text-slate-500 mt-1">{stagedFiles.filter(f => f.status === "idle").length} ready</div>
         </Card>
         <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Processing</div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stagedFiles.filter(f => f.status === "processing").length}</div>
+          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{processingFiles}</div>
           <div className="text-xs text-slate-500 mt-1">{globalStatus === "processing" ? "In progress..." : "Idle"}</div>
         </Card>
         <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Completed</div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stagedFiles.filter(f => f.status === "completed").length}</div>
-          <div className="text-xs text-slate-500 mt-1">{stagedFiles.length > 0 ? `${Math.round((stagedFiles.filter(f => f.status === "completed").length / stagedFiles.length) * 100)}%` : "0%"}</div>
+          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{completedFiles}</div>
+          <div className="text-xs text-slate-500 mt-1">{totalFiles > 0 ? `${Math.round((completedFiles / totalFiles) * 100)}%` : "0%"}</div>
         </Card>
         <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Avg Confidence</div>
           <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-            {stagedFiles.filter(f => f.results).length > 0 
-              ? `${(stagedFiles.filter(f => f.results).reduce((sum, f) => sum + (f.results?.confidence || 0), 0) / stagedFiles.filter(f => f.results).length * 100).toFixed(0)}%`
-              : "N/A"
+            {avgConfidence === "N/A"
+              ? "N/A"
+              : `${(parseFloat(avgConfidence as string) * 100).toFixed(0)}%`
             }
           </div>
           <div className="text-xs text-slate-500 mt-1">ASR confidence</div>
@@ -437,7 +448,7 @@ export function OperationsDashboard() {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Layers size={16} className="text-slate-500" />
-                Processing Queue ({stagedFiles.length})
+                Processing Queue ({totalFiles})
               </h3>
             </div>
             
@@ -485,62 +496,51 @@ export function OperationsDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                {queueItems.map(item => {
-                  const isBackendJob = !!(item as any).job_id;
-                  const itemId = isBackendJob ? (item as any).job_id : (item as any).id;
-                  const itemName = isBackendJob ? (item as any).filename : (item as any).name;
-                  const itemLang = isBackendJob ? (item as any).language : (item as any).results?.language;
-                  const itemDuration = isBackendJob ? (item as any).duration : (item as any).results?.duration;
-                  const itemSpeakers = isBackendJob ? (item as any).speakers : (item as any).results?.numSpeakers;
-                  const itemStatus = isBackendJob ? (item as any).status : (item as any).status;
-                  const uploadDate = isBackendJob ? (item as any).date : (item as any).uploadDate;
-                  
-                  return (
-                    <tr 
-                      key={itemId} 
-                      onClick={() => itemStatus === "completed" && setActiveFileId(itemId)}
-                      className={cn(
-                        "group transition-colors",
-                        activeFileId === itemId ? "bg-indigo-50 dark:bg-indigo-900/20" : "hover:bg-slate-50 dark:hover:bg-slate-900/30 cursor-pointer",
-                        itemStatus !== "completed" && "cursor-default opacity-80"
+                {backendQueue.map(job => (
+                  <tr 
+                    key={job.job_id} 
+                    onClick={() => job.status === "completed" && setActiveFileId(job.job_id)}
+                    className={cn(
+                      "group transition-colors",
+                      activeFileId === job.job_id ? "bg-indigo-50 dark:bg-indigo-900/20" : "hover:bg-slate-50 dark:hover:bg-slate-900/30",
+                      job.status === "completed" && "cursor-pointer",
+                      job.status !== "completed" && "cursor-default"
+                    )}
+                  >
+                    <td className="p-3 text-center">
+                      <button className="text-slate-300 dark:text-slate-600 hover:text-indigo-500 transition-colors">
+                        <Square size={16} />
+                      </button>
+                    </td>
+                    <td className="p-3">
+                      <div className="font-medium text-slate-900 dark:text-slate-200 truncate max-w-[150px]" title={job.filename}>
+                        {job.filename}
+                      </div>
+                      <div className="text-[10px] text-slate-500">{new Date(job.created_at).toLocaleDateString()}</div>
+                    </td>
+                    <td className="p-3">
+                      <span className="uppercase text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
+                        {job.language}
+                      </span>
+                    </td>
+                    <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                      {job.duration || "-"}
+                    </td>
+                    <td className="p-3 text-slate-600 dark:text-slate-400">
+                      {job.speakers_detected || "-"}
+                    </td>
+                    <td className="p-3">
+                      {job.status === "queued" && <Badge className="bg-slate-100 dark:bg-slate-800 text-[10px]">Queued</Badge>}
+                      {job.status === "processing" && (
+                        <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 text-[10px]">
+                          {job.progress}%
+                        </Badge>
                       )}
-                    >
-                      <td className="p-3 text-center" onClick={(e) => { e.stopPropagation(); !isBackendJob && toggleSelection(itemId); }}>
-                        {!isBackendJob && (
-                          <button className="text-slate-300 dark:text-slate-600 hover:text-indigo-500 transition-colors">
-                            {selectedStagedIds.has(itemId) ? <CheckSquare size={16} className="text-indigo-600 dark:text-indigo-400" /> : <Square size={16} />}
-                          </button>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <div className="font-medium text-slate-900 dark:text-slate-200 truncate max-w-[150px]" title={itemName}>
-                          {itemName}
-                        </div>
-                        <div className="text-[10px] text-slate-500">{uploadDate ? new Date(uploadDate).toLocaleDateString() : "N/A"}</div>
-                      </td>
-                      <td className="p-3">
-                        {itemLang ? (
-                          <span className="uppercase text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
-                            {itemLang}
-                          </span>
-                        ) : <span className="text-slate-400">-</span>}
-                      </td>
-                      <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">
-                        {itemDuration || "-"}
-                      </td>
-                      <td className="p-3 text-slate-600 dark:text-slate-400">
-                        {itemSpeakers || "-"}
-                      </td>
-                      <td className="p-3">
-                        {itemStatus === "idle" && <Badge className="bg-slate-100 dark:bg-slate-800 text-[10px]">Ready</Badge>}
-                        {itemStatus === "processing" && <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 text-[10px]">Proc...</Badge>}
-                        {itemStatus === "completed" && <Badge className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 text-[10px]">Done</Badge>}
-                        {itemStatus === "queued" && <Badge className="bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 text-[10px]">Queued</Badge>}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {queueItems.length === 0 && (
+                      {job.status === "completed" && <Badge className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 text-[10px]">Done</Badge>}
+                    </td>
+                  </tr>
+                ))}
+                {backendQueue.length === 0 && (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-slate-500 text-sm">
                       No files match the current queue or filters.
@@ -554,18 +554,18 @@ export function OperationsDashboard() {
 
         {/* Right Column: Audio Output Details Table */}
         <Card className="flex-1 flex flex-col min-h-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-          {activeFileData && activeFileData.results ? (
+          {activeFileData && (activeFileData.results || activeFileData.segments) ? (
             <>
               <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0 flex items-center justify-between">
                 <div className="flex items-center gap-3 overflow-hidden">
                   <FileAudio size={18} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
                   <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                    {activeFileData.name}
+                    {activeFileData.name || activeFileData.filename}
                   </h3>
                 </div>
                 <div className="flex gap-2 shrink-0 ml-4">
                   <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-mono text-[10px]">
-                    Conf: {(activeFileData.results.confidence * 100).toFixed(0)}%
+                    Conf: {activeFileData.results ? (activeFileData.results.confidence * 100).toFixed(0) : (activeFileData.confidence * 100).toFixed(0)}%
                   </Badge>
                 </div>
               </div>
@@ -583,7 +583,7 @@ export function OperationsDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                    {activeFileData.results.segments.map(seg => (
+                    {(activeFileData.results?.segments || activeFileData.segments || []).map((seg: any) => (
                       <tr key={seg.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors align-top">
                         <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.start.toFixed(1)}s</td>
                         <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.end.toFixed(1)}s</td>
@@ -597,7 +597,7 @@ export function OperationsDashboard() {
                           {seg.transcription}
                         </td>
                         <td className="p-3 text-indigo-900 dark:text-indigo-200 text-xs leading-relaxed">
-                          {seg.translation}
+                          {seg.translation || "(Not available)"}
                         </td>
                       </tr>
                     ))}

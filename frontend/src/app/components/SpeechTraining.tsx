@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router";
-import { Play, Pause, Check, X, Save, FileAudio, RotateCcw, Info } from "lucide-react";
+import { Play, Pause, Check, X, Save, FileAudio, RotateCcw, Info, Keyboard, CheckCheck, XCircle } from "lucide-react";
 import { Card, Button, Textarea, cn } from "./ui";
 import type { AppContextType } from "./Layout";
 
@@ -96,6 +96,55 @@ export function SpeechTraining() {
       alert("Dataset annotations saved and marked as human-verified.");
     }
   };
+
+  const handleBulkAcceptAll = () => {
+    const newStatuses: Record<number, "accepted" | "rejected" | null> = {};
+    segments.forEach(seg => {
+      newStatuses[seg.id] = "accepted";
+    });
+    setStatuses(newStatuses);
+  };
+
+  const handleBulkRejectAll = () => {
+    const newStatuses: Record<number, "accepted" | "rejected" | null> = {};
+    segments.forEach(seg => {
+      newStatuses[seg.id] = "rejected";
+    });
+    setStatuses(newStatuses);
+  };
+
+  const handleResetAll = () => {
+    setStatuses({});
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Space: Toggle play
+      if ((e.ctrlKey || e.metaKey) && e.code === "Space") {
+        e.preventDefault();
+        togglePlay();
+      }
+      // Ctrl/Cmd + R: Reset
+      if ((e.ctrlKey || e.metaKey) && e.key === "r") {
+        e.preventDefault();
+        setCurrentTime(0);
+        setIsPlaying(false);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }
+      // Ctrl/Cmd + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleSaveDataset();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [isPlaying, activeDatasetId]);
 
   // Generate mock waveform bars
   const waveformBars = Array.from({ length: 150 }).map((_, i) => Math.random() * 80 + 20);
@@ -303,15 +352,69 @@ export function SpeechTraining() {
         </div>
         
         {/* Footer */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
-          <div className="text-sm text-slate-600 dark:text-slate-400">
-            <span className="font-semibold text-slate-900 dark:text-slate-200">{segments.length}</span> segments | 
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium ml-2">{Object.values(statuses).filter(s => s === 'accepted').length} Accepted</span> | 
-            <span className="text-red-600 dark:text-red-400 font-medium ml-2">{Object.values(statuses).filter(s => s === 'rejected').length} Rejected</span>
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3 shrink-0">
+          {/* Progress Bar */}
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-medium text-slate-700 dark:text-slate-300 w-32">Progress</div>
+            <div className="flex-1 bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all duration-300"
+                style={{ width: `${segments.length > 0 ? ((Object.values(statuses).filter(s => s !== null).length / segments.length) * 100) : 0}%` }}
+              ></div>
+            </div>
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-400 w-20 text-right">
+              {Object.values(statuses).filter(s => s !== null).length}/{segments.length}
+            </span>
           </div>
-          <Button className="px-6 gap-2" onClick={handleSaveDataset}>
-            <Save size={16} /> Save & Mark Verified
-          </Button>
+
+          {/* Stats and Actions */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-4">
+              <span><span className="font-semibold text-slate-900 dark:text-slate-200">{segments.length}</span> segments</span>
+              <span><span className="text-emerald-600 dark:text-emerald-400 font-medium">{Object.values(statuses).filter(s => s === 'accepted').length}</span> Accepted</span>
+              <span><span className="text-red-600 dark:text-red-400 font-medium">{Object.values(statuses).filter(s => s === 'rejected').length}</span> Rejected</span>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={handleBulkAcceptAll}
+                className="text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+                title="Ctrl+Cmd+A: Accept all segments"
+              >
+                <CheckCheck size={14} className="mr-1" /> Accept All
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={handleBulkRejectAll}
+                className="text-red-700 dark:text-red-300 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/30"
+                title="Ctrl+Cmd+R: Reject all segments"
+              >
+                <XCircle size={14} className="mr-1" /> Reject All
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={handleResetAll}
+                className="text-slate-700 dark:text-slate-300"
+              >
+                <RotateCcw size={14} className="mr-1" /> Reset
+              </Button>
+              <Button 
+                className="px-6 gap-2" 
+                onClick={handleSaveDataset}
+                title="Ctrl+Cmd+S: Save dataset"
+              >
+                <Save size={16} /> Save & Verify
+              </Button>
+            </div>
+          </div>
+
+          {/* Keyboard Shortcuts Info */}
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+            <Keyboard size={12} className="inline mr-1" /> Shortcuts: Ctrl+Space (Play/Pause) | Ctrl+R (Reset) | Ctrl+S (Save)
+          </div>
         </div>
       </div>
     </div>
