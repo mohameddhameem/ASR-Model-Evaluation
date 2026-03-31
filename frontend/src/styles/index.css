@@ -1,3 +1,16 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+@keyframes h-bounce {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
+
+.animate-h-bounce-1 { animation: h-bounce 0.6s infinite ease-in-out; }
+.animate-h-bounce-2 { animation: h-bounce 0.6s infinite ease-in-out 0.2s; }
+.animate-h-bounce-3 { animation: h-bounce 0.6s infinite ease-in-out 0.4s; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+

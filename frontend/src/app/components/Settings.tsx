@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router";
-import { Save, Sliders, Cpu, Mic, MessageSquare } from "lucide-react";
+import { Save, Sliders, Cpu, Mic, MessageSquare, Zap } from "lucide-react";
 import { Card, Button, Label, Select, Textarea, cn } from "./ui";
 import type { AppContextType } from "./Layout";
 
@@ -135,6 +135,60 @@ export function Settings() {
                 <span>0.0</span>
                 <span>1.0</span>
               </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Application Mode */}
+        <Card className="p-5 space-y-5">
+          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <Zap size={18} className="text-indigo-500" />
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Application Mode</h3>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => setPrefs({ ...prefs, mode: 'demo' })}
+                className={cn(
+                  "flex items-start gap-3 p-3 rounded-lg border transition-all text-left",
+                  prefs.mode === 'demo'
+                    ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 ring-1 ring-indigo-500/20"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                )}
+              >
+                <div className={cn(
+                  "mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0",
+                  prefs.mode === 'demo' ? "border-indigo-600 bg-indigo-600" : "border-slate-300 dark:border-slate-600"
+                )}>
+                  {prefs.mode === 'demo' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Demo Mode</div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Perfect for exploring features and showing the platform to others with mock data.</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setPrefs({ ...prefs, mode: 'live' })}
+                className={cn(
+                  "flex items-start gap-3 p-3 rounded-lg border transition-all text-left",
+                  prefs.mode === 'live'
+                    ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 ring-1 ring-rose-500/20"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                )}
+              >
+                <div className={cn(
+                  "mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0",
+                  prefs.mode === 'live' ? "border-rose-600 bg-rose-600" : "border-slate-300 dark:border-slate-600"
+                )}>
+                  {prefs.mode === 'live' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Live Mode</div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Connect to production APIs and process real-time audio streams (Demo data used currently).</p>
+                </div>
+              </button>
             </div>
           </div>
         </Card>

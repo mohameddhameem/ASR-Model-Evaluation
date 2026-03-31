@@ -25,6 +25,7 @@ export type UserPreferences = {
   enableSampling: boolean;
   temperature: number;
   topP: number;
+  mode: 'demo' | 'live';
 };
 
 export type AppContextType = {
@@ -60,7 +61,8 @@ const INITIAL_PREFERENCES: UserPreferences = {
   contextWords: "",
   enableSampling: true,
   temperature: 0.2,
-  topP: 0.95
+  topP: 0.95,
+  mode: 'demo'
 };
 
 export function Layout() {
@@ -205,6 +207,20 @@ export function Layout() {
           
           {/* User & Settings Panel */}
           <div className="flex items-center gap-4">
+            {/* Mode Indicator */}
+            <div className={cn(
+              "hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border",
+              userPreferences.mode === 'demo' 
+                ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800" 
+                : "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800"
+            )}>
+              <div className={cn(
+                "w-1.5 h-1.5 rounded-full animate-pulse",
+                userPreferences.mode === 'demo' ? "bg-indigo-500" : "bg-rose-500"
+              )}></div>
+              {userPreferences.mode} MODE
+            </div>
+
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="p-2 rounded-full bg-slate-200/50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"

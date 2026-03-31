@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router";
-import { Play, Square, Code, AlignLeft, ListMusic, Database, Info, FileAudio } from "lucide-react";
+import { Play, Square, Code, AlignLeft, ListMusic, Database, Info, FileAudio, RotateCcw, FastForward, Timer } from "lucide-react";
 import { Card, Button, Label, Select, Textarea, cn } from "./ui";
+import { AudioWaveform } from "./AudioWaveform";
 import type { AppContextType } from "./Layout";
 
-const mockSegments = [
-  { id: 1, start: 0.0, end: 2.5, speaker: "Speaker 0", text: "I feel like this is my second home." },
-  { id: 2, start: 2.5, end: 5.1, speaker: "Speaker 1", text: "That's exactly what we wanted to achieve with the new design." },
-  { id: 3, start: 5.1, end: 8.4, speaker: "Speaker 0", text: "It really shows. The latency has improved dramatically since the last update." },
-  { id: 4, start: 8.4, end: 11.0, speaker: "Speaker 1", text: "We're aiming for sub-200 milliseconds by Q3." },
+const initialSegments = [
+  { id: 1, start: 0.0, end: 2.5, speaker: "Speaker 0", lang: "en", text: "I feel like this is my second home.", originalText: "I feel like this is my second home." },
+  { id: 2, start: 2.5, end: 5.1, speaker: "Speaker 1", lang: "en", text: "That's exactly what we wanted to achieve with the new design.", originalText: "That's exactly what we wanted to achieve with the new design." },
+  { id: 3, start: 5.1, end: 8.4, speaker: "Speaker 0", lang: "en", text: "It really shows. The latency has improved dramatically since the last update.", originalText: "It really shows. The latency has improved dramatically since the last update." },
+  { id: 4, start: 8.4, end: 11.0, speaker: "Speaker 1", lang: "en", text: "We're aiming for sub-200 milliseconds by Q3.", originalText: "We're aiming for sub-200 milliseconds by Q3." },
 ];
 
 export function EvaluationWorkbench() {
@@ -16,6 +17,7 @@ export function EvaluationWorkbench() {
   const [activeTab, setActiveTab] = useState<"raw" | "segments" | "translation">("segments");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [hasResults, setHasResults] = useState(true);
+  const [segments, setSegments] = useState(initialSegments);
   
   // Local state initialized with user preferences
   const [model, setModel] = useState(userPreferences.asrModel);
@@ -24,7 +26,15 @@ export function EvaluationWorkbench() {
   const [temperature, setTemperature] = useState(userPreferences.temperature);
   const [topP, setTopP] = useState(userPreferences.topP);
 
-  // Sync when global preferences change
+  // Playback state
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(11.0); // Mock duration
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Sync if global preferences change
   useEffect(() => {
     setModel(userPreferences.asrModel);
     setContextWords(userPreferences.contextWords);
@@ -32,6 +42,61 @@ export function EvaluationWorkbench() {
     setTemperature(userPreferences.temperature);
     setTopP(userPreferences.topP);
   }, [userPreferences]);
+
+  // Handle audio time updates
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      
+      // Update active segment based on time
+      const currentSegment = segments.find(
+        seg => audio.currentTime >= seg.start && audio.currentTime <= seg.end
+      );
+      setActiveSegmentId(currentSegment?.id || null);
+    };
+
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
+
+  const togglePlayback = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleSeek = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+  };
+
+  const handleSegmentTextChange = (id: number, newText: string) => {
+    setSegments(prev => prev.map(seg => 
+      seg.id === id ? { ...seg, text: newText } : seg
+    ));
+  };
   
   const selectedFile = datasets.find(d => d.id === activeDatasetId);
 
@@ -168,7 +233,7 @@ export function EvaluationWorkbench() {
       </div>
 
       {/* Action Bar */}
-      <div className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl sticky top-0 z-10 shadow-sm dark:shadow-black/20">
+      <div className="flex flex-wrap items-center gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl sticky top-0 z-10 shadow-sm dark:shadow-black/20">
         <Button 
           className="flex-1 sm:flex-none sm:w-48 text-base shadow-indigo-600/20 shadow-lg"
           onClick={() => {
@@ -189,9 +254,44 @@ export function EvaluationWorkbench() {
             </span>
           )}
         </Button>
-        <Button variant="danger" className="px-6" disabled={!isTranscribing}>
-          <Square size={16} className="mr-2" fill="currentColor" /> Stop
-        </Button>
+        
+        <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2 hidden sm:block"></div>
+
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            onClick={togglePlayback}
+            disabled={!hasResults}
+            className="shrink-0"
+          >
+            {isPlaying ? <Square size={14} className="mr-1.5" fill="currentColor" /> : <Play size={14} className="mr-1.5" fill="currentColor" />}
+            {isPlaying ? "Pause" : "Listen"}
+          </Button>
+
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-md border border-slate-200 dark:border-slate-700 shrink-0">
+            <Timer size={14} className="ml-1 text-slate-400" />
+            {[0.5, 1, 1.5, 2].map((speed) => (
+              <button
+                key={speed}
+                onClick={() => handleSpeedChange(speed)}
+                className={cn(
+                  "px-2 py-0.5 text-[10px] font-bold rounded transition-colors",
+                  playbackSpeed === speed 
+                    ? "bg-indigo-600 text-white" 
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                )}
+              >
+                {speed}x
+              </button>
+            ))}
+          </div>
+          
+          <Button variant="ghost" size="sm" onClick={() => handleSeek(0)} disabled={!hasResults} className="shrink-0">
+            <RotateCcw size={14} className="mr-1.5" /> Reset
+          </Button>
+        </div>
+
         {hasResults && !isTranscribing && (
           <div className="ml-auto text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2 font-medium bg-emerald-100 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800/50">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -199,6 +299,24 @@ export function EvaluationWorkbench() {
           </div>
         )}
       </div>
+
+      {/* Waveform Area */}
+      {hasResults && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+          <AudioWaveform
+            duration={duration}
+            currentTime={currentTime}
+            segments={segments}
+            onSeek={handleSeek}
+            activeSegmentId={activeSegmentId}
+          />
+          <audio 
+            ref={audioRef}
+            src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" // Using a real test MP3 for playback
+            className="hidden"
+          />
+        </div>
+      )}
 
       {/* Results Area */}
       {hasResults && (
@@ -236,29 +354,89 @@ export function EvaluationWorkbench() {
           <div className="p-4 flex-1 bg-white dark:bg-slate-950 rounded-b-xl">
             {activeTab === "raw" && (
               <pre className="p-4 bg-slate-50 dark:bg-[#0d1117] rounded-lg text-xs font-mono text-emerald-700 dark:text-emerald-300 overflow-auto border border-slate-200 dark:border-slate-800 max-h-[500px]">
-                {JSON.stringify({ model: model, duration: 11.0, language: "en", confidence: 0.98, segments: mockSegments }, null, 2)}
+                {JSON.stringify({ model: model, duration: 11.0, language: "en", confidence: 0.98, segments: segments }, null, 2)}
               </pre>
             )}
 
             {activeTab === "segments" && (
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                {mockSegments.map((seg) => (
-                  <div key={seg.id} className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 transition-all hover:border-slate-300 dark:hover:border-slate-700 flex flex-col sm:flex-row gap-4">
+                {segments.map((seg) => (
+                  <div 
+                    key={seg.id} 
+                    className={cn(
+                        "bg-slate-50 dark:bg-slate-900 border rounded-lg p-4 transition-all hover:border-indigo-300 dark:hover:border-indigo-700 flex flex-col sm:flex-row gap-4 cursor-pointer group/seg",
+                        activeSegmentId === seg.id ? "border-indigo-500 dark:border-indigo-600 ring-1 ring-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-900/10" : "border-slate-200 dark:border-slate-800"
+                    )}
+                    onClick={() => handleSeek(seg.start)}
+                  >
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-3">
-                        <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-medium border border-indigo-200 dark:border-indigo-500/30">
+                        <span className={cn(
+                            "px-2 py-0.5 rounded text-xs font-medium border transition-colors",
+                            activeSegmentId === seg.id 
+                                ? "bg-indigo-600 text-white border-indigo-600 shadow-sm" 
+                                : "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30"
+                        )}>
                           {seg.speaker}
                         </span>
-                        <span className="text-xs text-slate-600 dark:text-slate-400 font-mono bg-white dark:bg-slate-950 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                        
+                        <span className="px-1.5 py-0.5 rounded-sm bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold border border-slate-300 dark:border-slate-700 uppercase tracking-wider">
+                          {seg.lang}
+                        </span>
+
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                           {seg.start.toFixed(2)}s - {seg.end.toFixed(2)}s
                         </span>
+
+                        {seg.text !== seg.originalText && (
+                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-100 dark:border-emerald-900/30">
+                            Modified
+                          </span>
+                        )}
+
+                        {activeSegmentId === seg.id && isPlaying && (
+                            <div className="flex gap-0.5 h-3 items-end ml-1">
+                                <div className="w-0.5 bg-indigo-500 animate-h-bounce-1"></div>
+                                <div className="w-0.5 bg-indigo-500 animate-h-bounce-2"></div>
+                                <div className="w-0.5 bg-indigo-500 animate-h-bounce-3"></div>
+                            </div>
+                        )}
                       </div>
-                      <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed">{seg.text}</p>
+                      
+                      {activeSegmentId === seg.id ? (
+                        <div className="relative group/edit">
+                          <Textarea 
+                            value={seg.text}
+                            onChange={(e) => handleSegmentTextChange(seg.id, e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sm leading-relaxed min-h-[60px] bg-white dark:bg-slate-950 border-indigo-200 dark:border-indigo-800 focus:border-indigo-500 dark:focus:border-indigo-600 shadow-sm"
+                            placeholder="Edit transcription..."
+                          />
+                          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover/edit:opacity-100 transition-opacity">
+                            {seg.text !== seg.originalText && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 px-2 text-[10px] text-slate-500 hover:text-slate-900"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSegmentTextChange(seg.id, seg.originalText);
+                                }}
+                              >
+                                Revert
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className={cn(
+                          "text-sm leading-relaxed transition-colors",
+                          activeSegmentId === seg.id ? "text-slate-900 dark:text-slate-100" : "text-slate-800 dark:text-slate-200"
+                        )}>{seg.text}</p>
+                      )}
                     </div>
-                    <div className="sm:w-64 shrink-0 flex items-center bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 p-2">
-                      <audio controls className="w-full h-8 max-w-full" src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU5LjI3LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIwBRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVF">
-                        {/* Mock audio */}
-                      </audio>
+                    <div className="sm:w-12 shrink-0 flex items-center justify-center bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 p-2 group-hover/seg:border-indigo-300 dark:group-hover/seg:border-indigo-700 transition-colors">
+                      <Play size={16} className={cn(activeSegmentId === seg.id && isPlaying ? "text-indigo-600 fill-indigo-600" : "text-slate-400")} />
                     </div>
                   </div>
                 ))}
@@ -270,7 +448,7 @@ export function EvaluationWorkbench() {
                 <div className="flex flex-col">
                   <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Line-by-Line Translation</h4>
                   <div className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 space-y-4 overflow-y-auto">
-                    {mockSegments.map((seg, i) => (
+                    {segments.map((seg, i) => (
                       <div key={i} className="space-y-1 pb-4 border-b border-slate-200 dark:border-slate-800/50 last:border-0 last:pb-0">
                         <p className="text-sm text-slate-700 dark:text-slate-400">{seg.text}</p>
                         <p className="text-sm text-indigo-600 dark:text-indigo-300 font-medium">{"[Translated content mock based on input language to target]"}</p>

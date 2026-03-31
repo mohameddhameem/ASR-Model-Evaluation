@@ -7,19 +7,23 @@ Full-stack application for evaluating ASR models.
 Requirements: Node.js v24.14.0+, npm v10.0+
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd backend
 npm install
 npm start
 ```
+
 Runs on http://localhost:8000
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
 Runs on http://localhost:5174
 
 ## Verify It's Working
@@ -34,18 +38,21 @@ Then visit http://localhost:5174 in your browser.
 ## API Endpoints
 
 **ASR Models**
+
 - `GET /api/asr/models`
 - `POST /api/asr/models`
 - `PUT /api/asr/models/{model_id}`
 - `DELETE /api/asr/models/{model_id}`
 
 **Datasets**
+
 - `GET /api/datasets`
 - `POST /api/datasets`
 - `PUT /api/datasets/{dataset_id}`
 - `DELETE /api/datasets/{dataset_id}`
 
 **Analytics**
+
 - `GET /api/analytics/evaluations`
 - `GET /api/analytics/summary`
 - `POST /api/analytics/evaluations`
@@ -53,6 +60,7 @@ Then visit http://localhost:5174 in your browser.
 ## Features
 
 **Frontend (8 routes)**
+
 - Evaluation Workbench
 - Speech Training
 - Language ID Training
@@ -65,6 +73,7 @@ Then visit http://localhost:5174 in your browser.
 Included: Dark/light theme, CSV export, keyboard shortcuts, analytics charts, advanced filtering.
 
 **Backend**
+
 - 3 mock ASR models
 - 3 mock datasets
 - 3 evaluations with metrics
@@ -85,11 +94,13 @@ npm start         # run server
 ```
 
 **Frontend Structure**
+
 - `src/app/components/` - React components
 - `src/app/routes.tsx` - Routes
 - `src/styles/` - CSS
 
 **Backend Structure**
+
 - `server.js` - Express app
 - `data/mockData.js` - Mock data
 
@@ -109,30 +120,23 @@ npm start         # run server
 ## Troubleshooting
 
 **Frontend won't start:**
+
 ```bash
 cd frontend && rm -r node_modules package-lock.json && npm install && npm run dev
 ```
 
 **Backend won't start:**
+
 ```bash
 cd backend && rm -r node_modules package-lock.json && npm install && npm start
 ```
 
 **Port already in use:**
+
 ```bash
 # On Windows, find what's using the port
 netstat -ano | findstr :5174
 netsstat -ano | findstr :8000
 ```
+
 3. Review the guidelines in `/guidelines`
-
-## 📄 License
-
-This project is part of the ASR Model Evaluation initiative.
-
----
-
-**Last Updated**: March 29, 2026  
-**Frontend Status**: ✅ Running  
-**Backend Status**: ✅ Running  
-**Version**: 1.0.0

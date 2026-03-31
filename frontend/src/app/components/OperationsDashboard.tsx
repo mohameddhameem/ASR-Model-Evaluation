@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router";
 import { UploadCloud, ServerCog, Play, Square, CheckSquare, Layers, Search, Database, FileAudio, Settings2, Filter, AlertCircle, Download, TrendingUp } from "lucide-react";
 import { Card, Button, Input, Select, Label, cn, Badge } from "./ui";
@@ -36,6 +36,7 @@ export function OperationsDashboard() {
   const [selectedStagedIds, setSelectedStagedIds] = useState<Set<string>>(new Set());
   const [globalStatus, setGlobalStatus] = useState<"idle" | "processing" | "completed">("idle");
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  const [activeResultTab, setActiveResultTab] = useState<"details" | "summary">("details");
   const [backendQueue, setBackendQueue] = useState<any[]>([]);
 
   // Filters for left column
@@ -265,6 +266,27 @@ export function OperationsDashboard() {
     URL.revokeObjectURL(url);
   };
 
+  const handleSingleFileDownload = (file: any) => {
+    const data = {
+      filename: file.name || file.filename,
+      results: file.results || {
+        language: file.language,
+        confidence: file.confidence,
+        duration: file.duration,
+        segments: file.segments
+      },
+      exportedAt: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `asr-result-${data.filename.split('.')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleAddToDataset = () => {
     const filesToAdd = stagedFiles.filter(f => selectedStagedIds.has(f.id));
     
@@ -306,6 +328,21 @@ export function OperationsDashboard() {
 
   const activeFileData = stagedFiles.find(f => f.id === activeFileId) || 
                          backendQueue.find(j => j.job_id === activeFileId);
+
+  // Memoized mock summary for selected file
+  const activeFileSummary = useMemo(() => {
+    if (!activeFileData) return null;
+    const name = activeFileData.name || activeFileData.filename;
+    return {
+      overview: `The audio file "${name}" predominantly contains a professional dialogue focused on technical coordination. The speakers exhibit high clarity with minimal background noise, resulting in a strong confidence score.`,
+      keyPoints: [
+        "Discussion of system architecture and latency targets.",
+        "Verification of new design elements in the user interface.",
+        "Coordination of Q3 milestones and performance benchmarks."
+      ],
+      keywords: ["Latency", "Architecture", "Design", "Q3 Goals", "Performance", "Optimization"]
+    };
+  }, [activeFileId, stagedFiles, backendQueue]);
 
   // Combine backend queue with staged files for display
   const allFiles = backendQueue;
@@ -590,53 +627,146 @@ export function OperationsDashboard() {
         <Card className="flex-1 flex flex-col min-h-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
           {activeFileData && (activeFileData.results || activeFileData.segments) ? (
             <>
-              <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0 flex items-center justify-between">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <FileAudio size={18} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-                    {activeFileData.name || activeFileData.filename}
-                  </h3>
+              <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <FileAudio size={18} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                      {activeFileData.name || activeFileData.filename}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                      onClick={() => handleSingleFileDownload(activeFileData)}
+                      title="Download JSON"
+                    >
+                      <Download size={16} />
+                    </Button>
+                    <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-mono text-[10px]">
+                      Conf: {activeFileData.results ? (activeFileData.results.confidence * 100).toFixed(0) : (activeFileData.confidence * 100).toFixed(0)}%
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex gap-2 shrink-0 ml-4">
-                  <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-mono text-[10px]">
-                    Conf: {activeFileData.results ? (activeFileData.results.confidence * 100).toFixed(0) : (activeFileData.confidence * 100).toFixed(0)}%
-                  </Badge>
+
+                <div className="flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit border border-slate-200 dark:border-slate-700 transition-all">
+                  <button
+                    onClick={() => setActiveResultTab("details")}
+                    className={cn(
+                      "px-4 py-1 text-[11px] font-bold rounded-md transition-all uppercase tracking-wider",
+                      activeResultTab === "details"
+                        ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    )}
+                  >
+                    Details
+                  </button>
+                  <button
+                    onClick={() => setActiveResultTab("summary")}
+                    className={cn(
+                      "px-4 py-1 text-[11px] font-bold rounded-md transition-all uppercase tracking-wider",
+                      activeResultTab === "summary"
+                        ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    )}
+                  >
+                    Summary
+                  </button>
                 </div>
               </div>
               
               <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <table className="w-full text-left border-collapse text-sm">
-                  <thead className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10">
-                    <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      <th className="p-3 font-medium w-16">Start</th>
-                      <th className="p-3 font-medium w-16">End</th>
-                      <th className="p-3 font-medium w-16">Dur.</th>
-                      <th className="p-3 font-medium w-24">Speaker</th>
-                      <th className="p-3 font-medium w-[35%]">Transcribed Content</th>
-                      <th className="p-3 font-medium w-[35%]">Translated Content</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                    {(activeFileData.results?.segments || activeFileData.segments || []).map((seg: any) => (
-                      <tr key={seg.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors align-top">
-                        <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.start.toFixed(1)}s</td>
-                        <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.end.toFixed(1)}s</td>
-                        <td className="p-3 font-mono text-xs text-slate-500">{(seg.end - seg.start).toFixed(1)}s</td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium whitespace-nowrap">
-                            {seg.speaker}
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-900 dark:text-slate-200 text-xs leading-relaxed">
-                          {seg.transcription}
-                        </td>
-                        <td className="p-3 text-indigo-900 dark:text-indigo-200 text-xs leading-relaxed">
-                          {seg.translation || "(Not available)"}
-                        </td>
+                {activeResultTab === "details" ? (
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10">
+                      <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        <th className="p-3 font-medium w-16">Start</th>
+                        <th className="p-3 font-medium w-16">End</th>
+                        <th className="p-3 font-medium w-16">Dur.</th>
+                        <th className="p-3 font-medium w-24">Speaker</th>
+                        <th className="p-3 font-medium w-[35%]">Transcribed Content</th>
+                        <th className="p-3 font-medium w-[35%]">Translated Content</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                      {(activeFileData.results?.segments || activeFileData.segments || []).map((seg: any) => (
+                        <tr key={seg.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors align-top">
+                          <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.start.toFixed(1)}s</td>
+                          <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.end.toFixed(1)}s</td>
+                          <td className="p-3 font-mono text-xs text-slate-500">{(seg.end - seg.start).toFixed(1)}s</td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium whitespace-nowrap">
+                              {seg.speaker}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-900 dark:text-slate-200 text-xs leading-relaxed">
+                            {seg.transcription}
+                          </td>
+                          <td className="p-3 text-indigo-900 dark:text-indigo-200 text-xs leading-relaxed">
+                            {seg.translation || "(Not available)"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <section>
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Abstractive Overview</h4>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                        {activeFileSummary?.overview}
+                      </p>
+                    </section>
+
+                    <section>
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Key Highlights</h4>
+                      <ul className="space-y-2">
+                        {activeFileSummary?.keyPoints.map((point, i) => (
+                          <li key={i} className="flex gap-3 text-sm text-slate-600 dark:text-slate-400 items-start">
+                            <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Semantic Keywords</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {activeFileSummary?.keywords.map((kw, i) => (
+                          <span 
+                            key={i} 
+                            className="px-3 py-1 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-semibold rounded-full border border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-50 transition-colors cursor-default"
+                          >
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Speaker Engagement</h4>
+                      <div className="space-y-3">
+                        {Array.from({length: activeFileData.results?.numSpeakers || activeFileData.speakers || 2}).map((_, i) => (
+                          <div key={i} className="space-y-1">
+                            <div className="flex justify-between text-[10px] font-medium uppercase text-slate-500">
+                              <span>Speaker {i}</span>
+                              <span>{Math.floor(Math.random() * 40 + 20)}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" 
+                                style={{width: `${Math.floor(Math.random() * 40 + 20)}%`}}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+                )}
               </div>
             </>
           ) : (
