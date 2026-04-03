@@ -116,37 +116,31 @@ Generated on: ${new Date().toISOString()}
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Top Bar / Filters */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-        <div className="flex items-center gap-2 text-slate-900 dark:text-slate-200">
-          <Activity className="text-indigo-600 dark:text-indigo-400" size={20} />
-          <h2 className="text-lg font-semibold">Performance Dashboard</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-muted/30 border border-border p-4 rounded-[2px] shadow-sm">
+        <div className="flex items-center gap-2 text-foreground">
+          <Activity className="text-primary" size={20} />
+          <h2 className="text-lg font-bold uppercase tracking-wider underline decoration-primary decoration-2 underline-offset-8">Performance Dashboard</h2>
         </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 shrink-0">
-            <Filter size={14} className="text-slate-500 dark:text-slate-400" />
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Models:</span>
+          <div className="flex items-center gap-2 bg-muted/20 border border-border rounded-[2px] px-3 py-1.5 shrink-0">
+            <Filter size={14} className="text-muted-foreground" />
+            <span className="text-xs font-bold uppercase tracking-tighter text-muted-foreground">Models:</span>
             <button 
               onClick={() => setSelectedModels(prev => ({...prev, whisper: !prev.whisper}))}
-              className={cn("text-[10px] px-2 py-0.5 rounded-full border transition-colors", selectedModels.whisper ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-bold" : "bg-transparent text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800")}
+              className={cn("text-[10px] px-2 py-0.5 rounded-[2px] border transition-colors uppercase font-bold", selectedModels.whisper ? "bg-primary text-white border-primary" : "bg-transparent text-muted-foreground border-border hover:bg-muted/50")}
             >
               Whisper V3
             </button>
             <button 
               onClick={() => setSelectedModels(prev => ({...prev, vibeVoice: !prev.vibeVoice}))}
-              className={cn("text-[10px] px-2 py-0.5 rounded-full border transition-colors", selectedModels.vibeVoice ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-bold" : "bg-transparent text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800")}
+              className={cn("text-[10px] px-2 py-0.5 rounded-[2px] border transition-colors uppercase font-bold", selectedModels.vibeVoice ? "bg-primary text-white border-primary" : "bg-transparent text-muted-foreground border-border hover:bg-muted/50")}
             >
               VibeVoice
             </button>
-            <button 
-              onClick={() => setSelectedModels(prev => ({...prev, azure: !prev.azure}))}
-              className={cn("text-[10px] px-2 py-0.5 rounded-full border transition-colors", selectedModels.azure ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 font-bold" : "bg-transparent text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800")}
-            >
-              Azure
-            </button>
           </div>
           
-          <Select className="w-36 h-8 text-xs py-0" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
+          <Select className="w-36 h-8 text-xs py-0 rounded-[2px]" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
             <option value="24h">Last 24 Hours</option>
             <option value="7d">Last 7 Days</option>
             <option value="30d">Last 30 Days</option>
@@ -157,74 +151,71 @@ Generated on: ${new Date().toISOString()}
             variant="secondary" 
             size="sm"
             onClick={handleExportReport}
-            className="gap-2"
+            className="gap-2 rounded-[2px] h-8 border-border uppercase text-[10px] font-bold"
           >
-            <Download size={14} /> Export
+            <Download size={14} /> Export Report
           </Button>
         </div>
       </div>
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-5 flex flex-col relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
+        <Card className="p-5 flex flex-col relative overflow-hidden rounded-[2px] shadow-sm border-border bg-white dark:bg-card">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg border border-blue-200 dark:border-blue-500/20">
+            <div className="p-2 bg-muted text-primary rounded-[2px] border border-border">
               <Clock size={20} />
             </div>
-            <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">Average Latency (RTF)</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Average Latency (RTF)</h3>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">{performanceMetrics.latency.toFixed(2)}</span>
-            <span className="text-sm text-slate-500 font-medium">x Real-Time</span>
+            <span className="text-4xl font-bold text-foreground">{performanceMetrics.latency.toFixed(2)}</span>
+            <span className="text-xs text-muted-foreground font-mono uppercase">ratio</span>
           </div>
-          <div className="mt-4 flex items-center text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-100 dark:bg-emerald-900/20 w-max px-2 py-1 rounded">
-            <TrendingDown size={14} className="mr-1" /> -12% vs last week
+          <div className="mt-4 flex items-center text-[10px] text-[#16a34a] font-bold bg-[#f0fdf4] dark:bg-[#052c16] w-max px-2 py-1 rounded-[2px] uppercase">
+            <TrendingDown size={14} className="mr-1" /> -12% Improved
           </div>
         </Card>
 
-        <Card className="p-5 flex flex-col relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+        <Card className="p-5 flex flex-col relative overflow-hidden rounded-[2px] shadow-sm border-border bg-white dark:bg-card">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-lg border border-purple-200 dark:border-purple-500/20">
+            <div className="p-2 bg-muted text-primary rounded-[2px] border border-border">
               <Cpu size={20} />
             </div>
-            <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">System Utilization</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Capacity Utilization</h3>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">{performanceMetrics.gpu_load.toFixed(1)}</span>
-            <span className="text-sm text-slate-500 font-medium">% GPU Load</span>
+            <span className="text-4xl font-bold text-foreground">{performanceMetrics.gpu_load.toFixed(1)}</span>
+            <span className="text-xs text-muted-foreground font-mono uppercase">% Load</span>
           </div>
           
-          <div className="mt-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5">
-            <div className="bg-purple-500 h-1.5 rounded-full" style={{width: `${performanceMetrics.gpu_load}%`}}></div>
+          <div className="mt-4 w-full bg-muted rounded-full h-1.5">
+            <div className="bg-primary h-1.5 rounded-full" style={{width: `${performanceMetrics.gpu_load}%`}}></div>
           </div>
         </Card>
 
-        <Card className="p-5 flex flex-col relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+        <Card className="p-5 flex flex-col relative overflow-hidden rounded-[2px] shadow-sm border-border bg-white dark:bg-card">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg border border-amber-200 dark:border-amber-500/20">
+            <div className="p-2 bg-muted text-primary rounded-[2px] border border-border">
               <Zap size={20} />
             </div>
-            <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400">Estimated WER</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Estimated WER</h3>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">{performanceMetrics.wer.toFixed(1)}</span>
-            <span className="text-sm text-slate-500 font-medium">% Error Rate</span>
+            <span className="text-4xl font-bold text-foreground">{performanceMetrics.wer.toFixed(1)}</span>
+            <span className="text-xs text-muted-foreground font-mono uppercase">% Error</span>
           </div>
-          <div className="mt-4 flex items-center text-xs text-emerald-700 dark:text-emerald-400 font-medium bg-emerald-100 dark:bg-emerald-900/20 w-max px-2 py-1 rounded">
-            <TrendingDown size={14} className="mr-1" /> -0.3% vs last week
+          <div className="mt-4 flex items-center text-[10px] text-[#16a34a] font-bold bg-[#f0fdf4] dark:bg-[#052c16] w-max px-2 py-1 rounded-[2px] uppercase">
+            <TrendingDown size={14} className="mr-1" /> -0.3% Improved
           </div>
         </Card>
       </div>
 
       {/* Main Chart */}
-      <Card className="p-6">
+      <Card className="p-6 rounded-[2px] shadow-sm border-border bg-white dark:bg-card">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-200">Inference Time Comparison (ms)</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Comparing processing duration across audio length buckets.</p>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">Inference Latency Comparison (MS)</h3>
+            <p className="text-sm text-muted-foreground mt-1">Benchmarking processing time across audio segments.</p>
           </div>
         </div>
         <div className="h-[400px] w-full">
@@ -234,28 +225,27 @@ Generated on: ${new Date().toISOString()}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
-              <XAxis dataKey="name" stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+              <YAxis stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
               <Tooltip 
-                cursor={{ fill: isDark ? '#1e293b' : '#f1f5f9' }}
-                contentStyle={{ backgroundColor: chartTooltipBg, borderColor: chartTooltipBorder, borderRadius: '8px', color: chartTooltipText }}
+                cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}
+                contentStyle={{ backgroundColor: chartTooltipBg, borderColor: chartTooltipBorder, borderRadius: '2px', color: chartTooltipText, fontSize: '12px', fontWeight: 'bold' }}
                 itemStyle={{ color: chartTooltipText }}
               />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              {selectedModels.whisper && <Bar dataKey="whisper" name="Whisper V3 Large" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />}
-              {selectedModels.vibeVoice && <Bar dataKey="vibeVoice" name="VibeVoice" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />}
-              {selectedModels.azure && <Bar dataKey="azure" name="Azure" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />}
+              <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} />
+              {selectedModels.whisper && <Bar dataKey="whisper" name="Whisper V3" fill="#e60000" radius={[0, 0, 0, 0]} barSize={32} />}
+              {selectedModels.vibeVoice && <Bar dataKey="vibeVoice" name="VibeVoice PROD" fill="#333333" radius={[0, 0, 0, 0]} barSize={32} />}
             </BarChart>
           </ResponsiveContainer>
         </div>
       </Card>
 
       {/* Language-Specific WER Comparison */}
-      <Card className="p-6">
+      <Card className="p-6 rounded-[2px] shadow-sm border-border bg-white dark:bg-card">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-200">Word Error Rate by Language (%)</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Performance across different languages and dialects.</p>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">Language-Specific Error Rates (%)</h3>
+            <p className="text-sm text-muted-foreground mt-1">Linguistic accuracy metrics per dialect.</p>
           </div>
         </div>
         <div className="h-[300px] w-full">
@@ -265,28 +255,27 @@ Generated on: ${new Date().toISOString()}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
-              <XAxis dataKey="name" stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+              <YAxis stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
               <Tooltip 
-                cursor={{ fill: isDark ? '#1e293b' : '#f1f5f9' }}
-                contentStyle={{ backgroundColor: chartTooltipBg, borderColor: chartTooltipBorder, borderRadius: '8px', color: chartTooltipText }}
+                cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}
+                contentStyle={{ backgroundColor: chartTooltipBg, borderColor: chartTooltipBorder, borderRadius: '2px', color: chartTooltipText, fontSize: '12px', fontWeight: 'bold' }}
                 itemStyle={{ color: chartTooltipText }}
               />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              {selectedModels.whisper && <Bar dataKey="whisper" name="Whisper V3" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={35} />}
-              {selectedModels.vibeVoice && <Bar dataKey="vibeVoice" name="VibeVoice" fill="#10b981" radius={[4, 4, 0, 0]} barSize={35} />}
-              {selectedModels.azure && <Bar dataKey="azure" name="Azure" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={35} />}
+              <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} />
+              {selectedModels.whisper && <Bar dataKey="whisper" name="Whisper V3" fill="#e60000" radius={[0, 0, 0, 0]} barSize={28} />}
+              {selectedModels.vibeVoice && <Bar dataKey="vibeVoice" name="VibeVoice" fill="#333333" radius={[0, 0, 0, 0]} barSize={28} />}
             </BarChart>
           </ResponsiveContainer>
         </div>
       </Card>
 
       {/* Time Series Metrics */}
-      <Card className="p-6">
+      <Card className="p-6 rounded-[2px] shadow-sm border-border bg-white dark:bg-card">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-slate-200">7-Day Performance Trend</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Latency trend (RTF) over the past week.</p>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">7-Day Latency Drift</h3>
+            <p className="text-sm text-muted-foreground mt-1">Inference volatility over time (RTF).</p>
           </div>
         </div>
         <div className="h-[300px] w-full">
@@ -296,15 +285,15 @@ Generated on: ${new Date().toISOString()}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
-              <XAxis dataKey="day" stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="day" stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+              <YAxis stroke={chartAxisColor} tick={{ fill: chartAxisColor, fontSize: 10, fontWeight: 'bold' }} axisLine={false} tickLine={false} />
               <Tooltip 
-                cursor={{ fill: isDark ? '#1e293b' : '#f1f5f9' }}
-                contentStyle={{ backgroundColor: chartTooltipBg, borderColor: chartTooltipBorder, borderRadius: '8px', color: chartTooltipText }}
+                cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' }}
+                contentStyle={{ backgroundColor: chartTooltipBg, borderColor: chartTooltipBorder, borderRadius: '2px', color: chartTooltipText, fontSize: '12px', fontWeight: 'bold' }}
                 itemStyle={{ color: chartTooltipText }}
               />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Line type="monotone" dataKey="latency" name="Latency (RTF)" stroke="#6366f1" strokeWidth={2} connectNulls dot={{ fill: '#6366f1', r: 4 }} />
+              <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }} />
+              <Line type="monotone" dataKey="latency" name="LatencyRTF" stroke="#e60000" strokeWidth={3} connectNulls dot={{ fill: '#e60000', r: 4, strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>

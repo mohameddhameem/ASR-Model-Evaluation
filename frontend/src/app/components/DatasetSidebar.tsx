@@ -40,6 +40,7 @@ export function DatasetSidebar({ datasets, addDatasetItem, activeDatasetId, setA
           transcriptionVerified: false,
           lidVerified: false,
           detectedLanguage: "auto",
+          uploadDate: new Date().toISOString(),
         });
         
         // Auto-select if it's the first file uploaded
@@ -58,38 +59,38 @@ export function DatasetSidebar({ datasets, addDatasetItem, activeDatasetId, setA
 
   return (
     <aside 
-      className="flex flex-col w-72 lg:w-80 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shrink-0 z-10 relative"
+      className="flex flex-col w-72 lg:w-80 bg-background dark:bg-[#181818] border-r border-border shrink-0 z-10 relative"
       onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleFileUpload}
     >
       {/* Drag Overlay */}
       {isDragging && (
-        <div className="absolute inset-0 z-50 bg-indigo-50/90 dark:bg-indigo-900/90 border-2 border-dashed border-indigo-500 flex flex-col items-center justify-center backdrop-blur-sm">
-          <UploadCloud size={48} className="text-indigo-600 dark:text-indigo-400 mb-4 animate-bounce" />
-          <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-100">Drop audio files here</h3>
-          <p className="text-sm text-indigo-700 dark:text-indigo-300">Add to Dataset Manager</p>
+        <div className="absolute inset-0 z-50 bg-primary/10 dark:bg-primary/20 border-2 border-dashed border-primary flex flex-col items-center justify-center backdrop-blur-sm">
+          <UploadCloud size={48} className="text-primary mb-4 animate-bounce" />
+          <h3 className="text-lg font-bold text-foreground">Drop audio files here</h3>
+          <p className="text-sm text-primary">Add to Dataset Manager</p>
         </div>
       )}
 
       {/* Header & Filters */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3 shrink-0 bg-white dark:bg-slate-950/50">
-        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Dataset Manager</h2>
+      <div className="p-4 border-b border-border space-y-3 shrink-0 bg-white dark:bg-[#181818]">
+        <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Dataset Manager</h2>
         
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
+          <Search size={14} className="absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input 
             placeholder="Search files..." 
-            className="pl-8 h-9 text-xs" 
+            className="pl-8 h-9 text-xs rounded-[2px]" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         
         <div className="flex items-center gap-2">
-          <Filter size={14} className="text-slate-400 shrink-0" />
+          <Filter size={14} className="text-muted-foreground shrink-0" />
           <Select 
-            className="h-8 text-xs py-0" 
+            className="h-8 text-xs py-0 rounded-[2px]" 
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
@@ -102,9 +103,9 @@ export function DatasetSidebar({ datasets, addDatasetItem, activeDatasetId, setA
       </div>
 
       {/* File List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-slate-50 dark:bg-slate-900/50">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar bg-background dark:bg-[#181818]">
         {filteredDatasets.length === 0 ? (
-          <div className="p-4 text-center text-xs text-slate-500 mt-4">
+          <div className="p-4 text-center text-xs text-muted-foreground mt-4">
             No files match your filters.
           </div>
         ) : (
@@ -113,30 +114,30 @@ export function DatasetSidebar({ datasets, addDatasetItem, activeDatasetId, setA
               key={item.id}
               onClick={() => setActiveDatasetId(item.id)}
               className={cn(
-                "w-full text-left p-3 rounded-lg flex gap-3 transition-colors border",
+                "w-full text-left p-3 rounded-[2px] flex gap-3 transition-colors border",
                 activeDatasetId === item.id
-                  ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 shadow-sm"
-                  : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                  ? "bg-secondary border-primary/30 shadow-sm"
+                  : "bg-white dark:bg-[#202020] border-border hover:border-muted-foreground/30"
               )}
             >
               <div className="shrink-0 mt-0.5">
-                <FileAudio size={16} className={activeDatasetId === item.id ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"} />
+                <FileAudio size={16} className={activeDatasetId === item.id ? "text-primary" : "text-muted-foreground"} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className={cn(
                   "text-xs font-medium truncate",
-                  activeDatasetId === item.id ? "text-indigo-900 dark:text-indigo-100" : "text-slate-700 dark:text-slate-300"
+                  activeDatasetId === item.id ? "text-primary font-semibold" : "text-foreground/80"
                 )}>
                   {item.name}
                 </p>
                 <div className="flex items-center gap-3 mt-2 text-[10px]">
                   <div className="flex items-center gap-1" title="Language ID Status">
-                    <span className="text-slate-500 font-semibold">LID</span>
-                    {item.lidVerified ? <CheckCircle2 size={12} className="text-emerald-500" /> : <Circle size={12} className="text-slate-300 dark:text-slate-600" />}
+                    <span className="text-muted-foreground font-semibold">LID</span>
+                    {item.lidVerified ? <CheckCircle2 size={12} className="text-[#10b981]" /> : <Circle size={12} className="text-muted-foreground/30" />}
                   </div>
                   <div className="flex items-center gap-1" title="Transcription Status">
-                    <span className="text-slate-500 font-semibold">TRN</span>
-                    {item.transcriptionVerified ? <CheckCircle2 size={12} className="text-emerald-500" /> : <Circle size={12} className="text-slate-300 dark:text-slate-600" />}
+                    <span className="text-muted-foreground font-semibold">TRN</span>
+                    {item.transcriptionVerified ? <CheckCircle2 size={12} className="text-[#10b981]" /> : <Circle size={12} className="text-muted-foreground/30" />}
                   </div>
                 </div>
               </div>
@@ -146,7 +147,7 @@ export function DatasetSidebar({ datasets, addDatasetItem, activeDatasetId, setA
       </div>
 
       {/* Upload Footer */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-950/50">
+      <div className="p-3 border-t border-border shrink-0 bg-white dark:bg-[#181818]">
         <input 
           type="file" 
           accept="audio/*,video/*" 
@@ -157,7 +158,7 @@ export function DatasetSidebar({ datasets, addDatasetItem, activeDatasetId, setA
         />
         <label 
           htmlFor="sidebar-upload"
-          className="flex items-center justify-center w-full gap-2 p-2 rounded-md border border-dashed border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+          className="flex items-center justify-center w-full gap-2 p-2 rounded-[2px] border border-dashed border-border text-xs font-medium text-muted-foreground hover:bg-muted cursor-pointer transition-colors"
         >
           <UploadCloud size={14} /> Upload New Media
         </label>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router";
-import { UploadCloud, ServerCog, Play, Square, CheckSquare, Layers, Search, Database, FileAudio, Settings2, Filter, AlertCircle, Download, TrendingUp } from "lucide-react";
+import { UploadCloud, ServerCog, Play, Square, CheckSquare, Layers, Search, Database, FileAudio, Settings2, Filter, AlertCircle, Download, TrendingUp, RefreshCw } from "lucide-react";
 import { Card, Button, Input, Select, Label, cn, Badge } from "./ui";
 import type { AppContextType, DatasetItem } from "./Layout";
 
@@ -366,75 +366,75 @@ export function OperationsDashboard() {
     <div className="max-w-screen-2xl mx-auto h-[calc(100vh-8rem)] flex flex-col gap-4">
       {/* Summary Statistics */}
       <div className="grid grid-cols-4 gap-4 shrink-0">
-        <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Total Files</div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{totalFiles}</div>
-          <div className="text-xs text-slate-500 mt-1">{stagedFiles.filter(f => f.status === "idle").length} ready</div>
+        <Card className="p-4 bg-white dark:bg-card border-border rounded-[2px] shadow-sm">
+          <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mb-2">Inventory Total</div>
+          <div className="text-2xl font-bold text-foreground">{totalFiles}</div>
+          <div className="text-[10px] text-muted-foreground mt-1 font-mono uppercase">{stagedFiles.filter(f => f.status === "idle").length} Staged</div>
         </Card>
-        <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Processing</div>
-          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{processingFiles}</div>
-          <div className="text-xs text-slate-500 mt-1">{globalStatus === "processing" ? "In progress..." : "Idle"}</div>
+        <Card className="p-4 bg-white dark:bg-card border-border rounded-[2px] shadow-sm">
+          <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mb-2">Process Queue</div>
+          <div className="text-2xl font-bold text-primary">{processingFiles}</div>
+          <div className="text-[10px] text-muted-foreground mt-1 font-mono uppercase">{globalStatus === "processing" ? "Active Job" : "Idle State"}</div>
         </Card>
-        <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Completed</div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{completedFiles}</div>
-          <div className="text-xs text-slate-500 mt-1">{totalFiles > 0 ? `${Math.round((completedFiles / totalFiles) * 100)}%` : "0%"}</div>
+        <Card className="p-4 bg-white dark:bg-card border-border rounded-[2px] shadow-sm">
+          <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mb-2">Throughput</div>
+          <div className="text-2xl font-bold text-[#16a34a]">{completedFiles}</div>
+          <div className="text-[10px] text-muted-foreground mt-1 font-mono uppercase">{totalFiles > 0 ? `${Math.round((completedFiles / totalFiles) * 100)}%` : "0%"} yield</div>
         </Card>
-        <Card className="p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-2">Avg Confidence</div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+        <Card className="p-4 bg-white dark:bg-card border-border rounded-[2px] shadow-sm">
+          <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mb-2">Confidence Index</div>
+          <div className="text-2xl font-bold text-foreground">
             {avgConfidence === "N/A"
               ? "N/A"
               : `${(parseFloat(avgConfidence as string) * 100).toFixed(0)}%`
             }
           </div>
-          <div className="text-xs text-slate-500 mt-1">ASR confidence</div>
+          <div className="text-[10px] text-muted-foreground mt-1 font-mono uppercase">Avg ASR precision</div>
         </Card>
       </div>
-      {/* Top 20% Panel: Upload & Configuration */}
-      <Card className="shrink-0 p-4 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+      {/* Top Bar: Upload & Configuration */}
+      <Card className="shrink-0 p-4 bg-white dark:bg-card border-border shadow-sm flex flex-col md:flex-row gap-6 items-start md:items-center justify-between rounded-[2px]">
         {/* Upload Area */}
         <div className="flex flex-col gap-2 md:w-1/4">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <UploadCloud size={16} className="text-indigo-600 dark:text-indigo-400" />
-            Media Upload
+          <h3 className="text-xs font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
+            <UploadCloud size={16} className="text-primary" />
+            Media Ingestion
           </h3>
           <div className="flex gap-2 w-full">
             <input type="file" accept="audio/*,video/*" className="hidden" id="batch-upload" multiple onChange={handleFileUpload} />
-            <Button asChild variant="secondary" className="w-full border-dashed border-2 hover:border-indigo-400 bg-slate-50 dark:bg-slate-900/50">
-              <label htmlFor="batch-upload" className="cursor-pointer text-slate-600 dark:text-slate-400 font-medium">
-                Browse Files...
+            <Button asChild variant="secondary" className="w-full border-dashed border bg-muted/20 hover:border-primary/50 text-muted-foreground font-bold uppercase text-[10px] rounded-[2px] h-9">
+              <label htmlFor="batch-upload" className="cursor-pointer">
+                Select Source Files
               </label>
             </Button>
           </div>
         </div>
 
-        <div className="hidden md:block w-px h-12 bg-slate-200 dark:bg-slate-800"></div>
+        <div className="hidden md:block w-px h-12 bg-border"></div>
 
         {/* Filters */}
         <div className="flex-1 flex gap-3 w-full">
-          <div className="space-y-1 flex-1">
-            <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Status</Label>
+          <div className="space-y-1.5 flex-1">
+            <Label className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Process Flow</Label>
             <Select 
-              className="h-8 text-xs" 
+              className="h-9 text-[11px] rounded-[2px] bg-white dark:bg-card" 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="all">All Statuses</option>
-              <option value="completed">Completed</option>
-              <option value="processing">Processing</option>
-              <option value="queued">Queued</option>
+              <option value="all">Cumulative Queue</option>
+              <option value="completed">Production Ready</option>
+              <option value="processing">In-Transit</option>
+              <option value="queued">Pending Review</option>
             </Select>
           </div>
-          <div className="space-y-1 flex-1">
-            <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Language</Label>
+          <div className="space-y-1.5 flex-1">
+            <Label className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Dialect Filter</Label>
             <Select 
-              className="h-8 text-xs"
+              className="h-9 text-[11px] rounded-[2px] bg-white dark:bg-card"
               value={langFilter}
               onChange={(e) => setLangFilter(e.target.value)}
             >
-              <option value="all">All Languages</option>
+              <option value="all">Universal View</option>
               <option value="en">English (EN)</option>
               <option value="zh">Mandarin (ZH)</option>
               <option value="fr">French (FR)</option>
@@ -442,39 +442,39 @@ export function OperationsDashboard() {
           </div>
         </div>
 
-        <div className="hidden md:block w-px h-10 bg-slate-200 dark:bg-slate-800"></div>
+        <div className="hidden md:block w-px h-10 bg-border"></div>
 
         {/* Actions Area */}
-        <div className="flex gap-3 md:w-auto w-full md:justify-end shrink-0 pt-5 md:pt-0">
+        <div className="flex gap-3 md:w-auto w-full md:justify-end shrink-0 md:pt-0 pt-4">
           <Button 
             variant="secondary" 
             disabled={selectedStagedIds.size === 0}
             onClick={handleAddToDataset}
-            className="flex-1 md:flex-none border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+            className="flex-1 md:flex-none border-border text-primary hover:bg-muted/50 rounded-[2px] uppercase text-[10px] font-bold h-9 px-6 bg-white dark:bg-card"
           >
-            <Database size={16} className="mr-2 hidden sm:block" /> Add to Dataset
+            <Database size={14} className="mr-2" /> Commit to Dataset
           </Button>
           <Button 
             variant="secondary" 
             disabled={stagedFiles.filter(f => f.status === "completed").length === 0}
             onClick={handleExportProcessed}
-            className="flex-1 md:flex-none border-slate-300 dark:border-slate-600"
+            className="flex-1 md:flex-none border-border text-foreground hover:bg-muted font-bold text-[10px] uppercase rounded-[2px] h-9 px-6 bg-white dark:bg-card"
           >
-            <Download size={16} className="mr-2 hidden sm:block" /> Export
+            <Download size={14} className="mr-2" /> Export
           </Button>
           <Button 
             onClick={handleProcessAll}
             disabled={stagedFiles.length === 0 || globalStatus === "processing"}
-            className="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 w-32 shadow-md shadow-indigo-600/20"
+            className="flex-1 md:flex-none bg-primary hover:bg-primary/90 text-white rounded-[2px] h-9 px-10 uppercase text-[10px] font-bold tracking-widest shadow-sm"
           >
             {globalStatus === "processing" ? (
               <span className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-white animate-spin"></div>
-                Proc...
+                <RefreshCw size={14} className="animate-spin" />
+                INITIATING...
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                <Play size={16} /> Process All
+                <Play size={14} /> Run Analytics
               </span>
             )}
           </Button>
@@ -485,12 +485,12 @@ export function OperationsDashboard() {
       <div className="flex gap-4 min-h-0 flex-1">
         
         {/* Left Column: Uploaded Files Table */}
-        <Card className="w-[45%] flex flex-col min-h-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-          <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 flex flex-col gap-3 shrink-0">
+        <Card className="w-[45%] flex flex-col min-h-0 border-border bg-white dark:bg-card shadow-sm overflow-hidden rounded-[2px]">
+          <div className="p-3 border-b border-border bg-muted/30 flex flex-col gap-3 shrink-0">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Layers size={16} className="text-slate-500" />
-                Processing Queue ({totalFiles})
+              <h3 className="text-xs font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
+                <Layers size={14} className="text-primary" />
+                Active Inventory ({totalFiles})
               </h3>
             </div>
             
@@ -498,42 +498,42 @@ export function OperationsDashboard() {
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                  <Search size={14} className="text-slate-400" />
+                  <Search size={14} className="text-muted-foreground" />
                 </div>
                 <Input 
                   type="text" 
-                  placeholder="Filter by filename..."
-                  className="pl-8 h-8 text-xs w-full"
+                  placeholder="Query by nomenclature..."
+                  className="pl-8 h-8 text-[11px] w-full rounded-[2px] bg-white dark:bg-card border-border"
                 />
               </div>
-              <div className="relative w-32">
+              <div className="relative w-32 shrink-0">
                 <Input 
                   type="date" 
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="h-8 text-xs w-full"
+                  className="h-8 text-[11px] w-full rounded-[2px] bg-white dark:bg-card border-border px-2"
                 />
               </div>
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10 shadow-sm">
-                <tr className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <table className="w-full text-left border-collapse">
+              <thead className="sticky top-0 bg-muted/80 backdrop-blur-md border-b border-border z-10">
+                <tr className="text-[10px] uppercase font-bold tracking-[0.1em] text-muted-foreground">
                   <th className="p-3 w-10 text-center">
-                    <button onClick={toggleAll} className="text-slate-400 hover:text-indigo-600 transition-colors pt-1">
-                      {selectedStagedIds.size === filteredFiles.length && filteredFiles.length > 0 ? <CheckSquare size={16} className="text-indigo-600" /> : <Square size={16} />}
+                    <button onClick={toggleAll} className="text-muted-foreground hover:text-primary transition-colors">
+                      {selectedStagedIds.size === filteredFiles.length && filteredFiles.length > 0 ? <CheckSquare size={16} className="text-primary" /> : <Square size={16} />}
                     </button>
                   </th>
-                  <th className="p-3 font-medium">File Name</th>
-                  <th className="p-3 font-medium">Language</th>
-                  <th className="p-3 font-medium">Duration</th>
-                  <th className="p-3 font-medium">Speakers</th>
-                  <th className="p-3 font-medium">Status</th>
+                  <th className="p-3">Core Identity</th>
+                  <th className="p-3">Dialect</th>
+                  <th className="p-3">Runtime</th>
+                  <th className="p-3">Entities</th>
+                  <th className="p-3 text-right pr-6">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+              <tbody className="divide-y divide-border">
                 {filteredFiles.map(item => {
                     const isJob = 'job_id' in item;
                     const id = isJob ? item.job_id : item.id;
@@ -550,8 +550,8 @@ export function OperationsDashboard() {
                         key={id} 
                         onClick={() => status === "completed" && setActiveFileId(id)}
                         className={cn(
-                          "group transition-colors",
-                          activeFileId === id ? "bg-indigo-50 dark:bg-indigo-900/20" : "hover:bg-slate-50 dark:hover:bg-slate-900/30",
+                          "group transition-colors text-[11px]",
+                          activeFileId === id ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20",
                           status === "completed" && "cursor-pointer",
                           status !== "completed" && "cursor-default"
                         )}
@@ -560,42 +560,42 @@ export function OperationsDashboard() {
                           {!isJob ? (
                             <button 
                               onClick={(e) => { e.stopPropagation(); toggleSelection(id); }}
-                              className="text-slate-400 hover:text-indigo-600 transition-colors"
+                              className="text-muted-foreground hover:text-primary transition-colors"
                             >
-                              {selectedStagedIds.has(id) ? <CheckSquare size={16} className="text-indigo-600" /> : <Square size={16} />}
+                              {selectedStagedIds.has(id) ? <CheckSquare size={16} className="text-primary" /> : <Square size={16} />}
                             </button>
                           ) : (
-                            <div className="flex justify-center text-slate-300 dark:text-slate-700">
-                              <Square size={16} className="opacity-50" />
+                            <div className="flex justify-center text-muted-foreground/30">
+                              <Square size={16} />
                             </div>
                           )}
                         </td>
                         <td className="p-3">
-                          <div className="font-medium text-slate-900 dark:text-slate-200 truncate max-w-[150px]" title={name}>
+                          <div className="font-bold text-foreground truncate max-w-[150px] uppercase font-mono" title={name}>
                             {name}
                           </div>
-                          <div className="text-[10px] text-slate-500">{date}</div>
                         </td>
                         <td className="p-3">
-                          <span className="uppercase text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
+                          <span className="uppercase text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded-[2px] text-foreground border border-border">
                             {language}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                        <td className="p-3 font-mono text-[10px] font-bold text-muted-foreground">
                           {duration}
                         </td>
-                        <td className="p-3 text-slate-600 dark:text-slate-400">
+                        <td className="p-3 text-muted-foreground font-bold">
                           {isJob ? (item.speakers || "-") : (item.results?.numSpeakers || "-")}
                         </td>
-                        <td className="p-3">
-                          {status === "queued" && <Badge className="bg-slate-100 dark:bg-slate-800 text-[10px]">Queued</Badge>}
-                          {status === "idle" && <Badge className="bg-slate-100 dark:bg-slate-800 text-[10px]">Ready</Badge>}
+                        <td className="p-3 text-right pr-6">
+                          {status === "queued" && <Badge variant="secondary" className="text-[9px] uppercase font-bold rounded-[2px]">Queued</Badge>}
+                          {status === "idle" && <Badge variant="secondary" className="text-[9px] uppercase font-bold rounded-[2px] bg-slate-100 text-slate-600">Staged</Badge>}
                           {status === "processing" && (
-                            <Badge className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 text-[10px]">
-                              {item.progress || 0}%
-                            </Badge>
+                            <div className="flex items-center gap-2 justify-end">
+                                <RefreshCw size={10} className="animate-spin text-primary" />
+                                <span className="text-[9px] font-bold text-primary uppercase">Active {item.progress || 0}%</span>
+                            </div>
                           )}
-                          {status === "completed" && <Badge className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 text-[10px]">Done</Badge>}
+                          {status === "completed" && <Badge className="bg-[#f0fdf4] text-[#16a34a] border-[#16a34a]/20 text-[9px] uppercase font-bold rounded-[2px]">Validated</Badge>}
                         </td>
                       </tr>
                     );
@@ -603,8 +603,8 @@ export function OperationsDashboard() {
                 }
                 {backendQueue.length === 0 && stagedFiles.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-500 text-sm">
-                      No files match the current queue or filters.
+                    <td colSpan={6} className="p-12 text-center text-muted-foreground text-[11px] uppercase tracking-widest italic opacity-50">
+                      Empty Management Console
                     </td>
                   </tr>
                 )}
@@ -614,14 +614,14 @@ export function OperationsDashboard() {
         </Card>
 
         {/* Right Column: Audio Output Details Table */}
-        <Card className="flex-1 flex flex-col min-h-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <Card className="flex-1 flex flex-col min-h-0 border-border bg-white dark:bg-card shadow-sm overflow-hidden rounded-[2px]">
           {activeFileData && (activeFileData.results || activeFileData.segments) ? (
             <>
-              <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 shrink-0 flex flex-col gap-3">
+              <div className="p-3 border-b border-border bg-muted/30 shrink-0 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <FileAudio size={18} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <FileAudio size={18} className="text-primary shrink-0" />
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-foreground truncate">
                       {activeFileData.name || activeFileData.filename}
                     </h3>
                   </div>
@@ -629,125 +629,111 @@ export function OperationsDashboard() {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-[2px]"
                       onClick={() => handleSingleFileDownload(activeFileData)}
-                      title="Download JSON"
+                      title="Download JSON Report"
                     >
-                      <Download size={16} />
+                      <Download size={14} />
                     </Button>
-                    <Badge className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-mono text-[10px]">
-                      Conf: {activeFileData.results ? (activeFileData.results.confidence * 100).toFixed(0) : (activeFileData.confidence * 100).toFixed(0)}%
+                    <Badge variant="success" className="font-mono text-[9px] px-2 py-1">
+                      CONF: {activeFileData.results ? (activeFileData.results.confidence * 100).toFixed(0) : (activeFileData.confidence * 100).toFixed(0)}%
                     </Badge>
                   </div>
                 </div>
 
-                <div className="flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit border border-slate-200 dark:border-slate-700 transition-all">
+                <div className="flex p-0.5 bg-muted rounded-[2px] w-fit border border-border">
                   <button
                     onClick={() => setActiveResultTab("details")}
                     className={cn(
-                      "px-4 py-1 text-[11px] font-bold rounded-md transition-all uppercase tracking-wider",
+                      "px-6 py-1.5 text-[10px] font-bold rounded-[2px] transition-all uppercase tracking-widest",
                       activeResultTab === "details"
-                        ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                        ? "bg-white dark:bg-card text-primary shadow-sm border border-border"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    Details
+                    Granular Segments
                   </button>
                   <button
                     onClick={() => setActiveResultTab("summary")}
                     className={cn(
-                      "px-4 py-1 text-[11px] font-bold rounded-md transition-all uppercase tracking-wider",
+                      "px-6 py-1.5 text-[10px] font-bold rounded-[2px] transition-all uppercase tracking-widest",
                       activeResultTab === "summary"
-                        ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                        ? "bg-white dark:bg-card text-primary shadow-sm border border-border"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    Summary
+                    Executive Summary
                   </button>
                 </div>
               </div>
               
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {activeResultTab === "details" ? (
-                  <table className="w-full text-left border-collapse text-sm">
-                    <thead className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-10">
-                      <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        <th className="p-3 font-medium w-16">Start</th>
-                        <th className="p-3 font-medium w-16">End</th>
-                        <th className="p-3 font-medium w-16">Dur.</th>
-                        <th className="p-3 font-medium w-24">Speaker</th>
-                        <th className="p-3 font-medium w-[35%]">Transcribed Content</th>
-                        <th className="p-3 font-medium w-[35%]">Translated Content</th>
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 bg-muted/80 backdrop-blur-md border-b border-border z-10 shadow-sm">
+                      <tr className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
+                        <th className="p-3 w-16">Start</th>
+                        <th className="p-3 w-16">End</th>
+                        <th className="p-3 w-16 text-center">Δ</th>
+                        <th className="p-3 w-24">Entity</th>
+                        <th className="p-3 w-[35%]">Transcription</th>
+                        <th className="p-3 w-[35%]">Internal Translation</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                    <tbody className="divide-y divide-border">
                       {(activeFileData.results?.segments || activeFileData.segments || []).map((seg: any) => (
-                        <tr key={seg.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors align-top">
-                          <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.start.toFixed(1)}s</td>
-                          <td className="p-3 font-mono text-xs text-slate-600 dark:text-slate-400">{seg.end.toFixed(1)}s</td>
-                          <td className="p-3 font-mono text-xs text-slate-500">{(seg.end - seg.start).toFixed(1)}s</td>
+                        <tr key={seg.id} className="hover:bg-muted/10 transition-colors align-top text-[11px]">
+                          <td className="p-3 font-mono font-bold text-muted-foreground">{seg.start.toFixed(1)}s</td>
+                          <td className="p-3 font-mono font-bold text-muted-foreground">{seg.end.toFixed(1)}s</td>
+                          <td className="p-3 font-mono text-muted-foreground/60 text-center">{(seg.end - seg.start).toFixed(1)}s</td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded-[2px] bg-muted text-foreground text-[10px] font-bold uppercase border border-border">
                               {seg.speaker}
                             </span>
                           </td>
-                          <td className="p-3 text-slate-900 dark:text-slate-200 text-xs leading-relaxed">
+                          <td className="p-3 text-foreground leading-relaxed font-medium">
                             {seg.transcription}
                           </td>
-                          <td className="p-3 text-indigo-900 dark:text-indigo-200 text-xs leading-relaxed">
-                            {seg.translation || "(Not available)"}
+                          <td className="p-3 text-primary leading-relaxed opacity-80 font-medium">
+                            {seg.translation || "—"}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <div className="p-6 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <section>
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Abstractive Overview</h4>
-                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                        {activeFileSummary?.overview}
+                      <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-4 border-l-2 border-primary pl-3">Acoustic Intelligence Overview</h4>
+                      <p className="text-[13px] text-foreground leading-relaxed bg-muted/20 p-5 rounded-[2px] border border-border italic">
+                        "{activeFileSummary?.overview}"
                       </p>
                     </section>
 
                     <section>
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Key Highlights</h4>
-                      <ul className="space-y-2">
+                      <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-4 border-l-2 border-primary pl-3">Calculated Milestones</h4>
+                      <ul className="space-y-3">
                         {activeFileSummary?.keyPoints.map((point, i) => (
-                          <li key={i} className="flex gap-3 text-sm text-slate-600 dark:text-slate-400 items-start">
-                            <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0 shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-                            {point}
+                          <li key={i} className="flex gap-4 text-[12px] text-muted-foreground items-start">
+                            <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0"></div>
+                            <span className="font-medium">{point}</span>
                           </li>
                         ))}
                       </ul>
                     </section>
 
-                    <section>
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Semantic Keywords</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {activeFileSummary?.keywords.map((kw, i) => (
-                          <span 
-                            key={i} 
-                            className="px-3 py-1 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-semibold rounded-full border border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-50 transition-colors cursor-default"
-                          >
-                            {kw}
-                          </span>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Speaker Engagement</h4>
-                      <div className="space-y-3">
+                    <section className="pt-6 border-t border-border">
+                      <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-4">Engagement Distribution</h4>
+                      <div className="space-y-4">
                         {Array.from({length: activeFileData.results?.numSpeakers || activeFileData.speakers || 2}).map((_, i) => (
-                          <div key={i} className="space-y-1">
-                            <div className="flex justify-between text-[10px] font-medium uppercase text-slate-500">
-                              <span>Speaker {i}</span>
-                              <span>{Math.floor(Math.random() * 40 + 20)}%</span>
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                              <span>Entity {i}</span>
+                              <span className="text-primary font-mono">{Math.floor(Math.random() * 40 + 20)}%</span>
                             </div>
-                            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" 
+                                className="h-full bg-primary" 
                                 style={{width: `${Math.floor(Math.random() * 40 + 20)}%`}}
                               ></div>
                             </div>
@@ -760,34 +746,34 @@ export function OperationsDashboard() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-transparent">
-              <div className="bg-white dark:bg-slate-900/50 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-sm w-full">
-                <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mb-5">
-                  <Play size={20} className="ml-1" />
+            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted/10 opacity-70">
+              <div className="bg-white dark:bg-card p-10 rounded-[2px] shadow-sm border border-border max-w-sm w-full text-center">
+                <div className="w-16 h-16 bg-muted text-primary rounded-[2px] flex items-center justify-center mb-6 mx-auto border border-border">
+                  <Play size={24} className="ml-1" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Getting Started</h3>
-                <p className="text-sm text-slate-500 mb-6 font-medium">Process multiple audio files through the pipeline:</p>
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.2em] mb-2">Protocol Initialization</h3>
+                <p className="text-[11px] text-muted-foreground mb-8 font-medium">Follow the prescribed workflow to ingest and analyze media inventory:</p>
                 
-                <div className="space-y-5 text-left">
+                <div className="space-y-6 text-left">
                   <div className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">1</div>
+                    <div className="w-6 h-6 rounded-[2px] bg-muted flex items-center justify-center text-[10px] font-bold text-foreground shrink-0 border border-border uppercase">01</div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Upload Media</h4>
-                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">Click "Browse Files..." to queue audio or video files.</p>
+                      <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Inventory Loading</h4>
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">Stage media files for high-precision ASR processing.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">2</div>
+                    <div className="w-6 h-6 rounded-[2px] bg-muted flex items-center justify-center text-[10px] font-bold text-foreground shrink-0 border border-border uppercase">02</div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Run Processing</h4>
-                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">Hit "Process All" to run your selected ASR model.</p>
+                      <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Execute Optimization</h4>
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">Trigger the parallel analytic pipeline for chosen dialects.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">3</div>
+                    <div className="w-6 h-6 rounded-[2px] bg-muted flex items-center justify-center text-[10px] font-bold text-foreground shrink-0 border border-border uppercase">03</div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Review Output</h4>
-                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">Click any "Done" file in the queue to inspect segments.</p>
+                      <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider">Validation</h4>
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">Review granular segments and commit to production datasets.</p>
                     </div>
                   </div>
                 </div>

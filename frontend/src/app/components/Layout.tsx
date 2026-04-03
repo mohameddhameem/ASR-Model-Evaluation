@@ -123,31 +123,31 @@ export function Layout() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 overflow-hidden font-sans transition-colors duration-200">
+    <div className="flex h-screen w-full bg-background dark:bg-background text-foreground overflow-hidden font-sans transition-colors duration-200">
       {/* Primary Sidebar (Navigation) */}
       <aside
         className={cn(
-          "flex flex-col bg-slate-100 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 z-20 shrink-0",
+          "flex flex-col bg-white dark:bg-[#181818] border-r border-border transition-all duration-300 z-20 shrink-0",
           collapsed ? "w-16" : "w-56"
         )}
       >
-        <div className="h-14 flex items-center justify-between px-3 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-950/50">
+        <div className="h-14 flex items-center justify-between px-3 border-b border-border shrink-0 bg-white dark:bg-[#181818]">
           {!collapsed && (
-            <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100 px-1 overflow-hidden whitespace-nowrap">
-              <div className="h-6 w-6 bg-indigo-600 rounded flex items-center justify-center shrink-0 shadow-sm">
+            <div className="flex items-center gap-2 font-semibold text-foreground px-1 overflow-hidden whitespace-nowrap">
+              <div className="h-6 w-6 bg-primary rounded-[2px] flex items-center justify-center shrink-0 shadow-sm">
                 <Bot size={14} className="text-white" />
               </div>
               <span>ASR Platform</span>
             </div>
           )}
           {collapsed && (
-            <div className="h-6 w-6 bg-indigo-600 rounded flex items-center justify-center mx-auto shrink-0 shadow-sm">
+            <div className="h-6 w-6 bg-primary rounded-[2px] flex items-center justify-center mx-auto shrink-0 shadow-sm">
               <Bot size={14} className="text-white" />
             </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-200 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors hidden md:block"
+            className="p-1 rounded-[2px] text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-muted/50 transition-colors hidden md:block"
           >
             {collapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
           </button>
@@ -163,17 +163,17 @@ export function Layout() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors whitespace-nowrap group relative",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-[2px] transition-colors whitespace-nowrap group relative",
                   isActive
-                    ? "bg-indigo-100 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-400 font-medium"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
+                    ? "bg-secondary text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
                 title={item.label}
               >
-                <Icon size={22} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100"} />
+                <Icon size={22} className={isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"} />
                 {!collapsed && <span className="flex-1">{item.label}</span>}
                 {!collapsed && item.badge && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-[2px] bg-muted-foreground/10 text-muted-foreground font-bold uppercase tracking-wider">
                     {item.badge}
                   </span>
                 )}
@@ -182,14 +182,14 @@ export function Layout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 whitespace-nowrap overflow-hidden bg-white dark:bg-slate-950/50">
+        <div className="p-4 border-t border-border text-[10px] uppercase font-bold tracking-widest text-muted-foreground whitespace-nowrap overflow-hidden bg-white dark:bg-[#181818]">
           {!collapsed ? (
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-              System Online
+              <div className="w-1.5 h-1.5 rounded-full bg-[#16a34a] shadow-[0_0_8px_rgba(22,163,74,0.6)]"></div>
+              Service Terminal active
             </div>
           ) : (
-            <div className="w-2 h-2 rounded-full bg-emerald-500 mx-auto shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#16a34a] mx-auto shadow-[0_0_8px_rgba(22,163,74,0.6)]"></div>
           )}
         </div>
       </aside>
@@ -205,9 +205,9 @@ export function Layout() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-200">
-        <header className="h-14 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 bg-slate-50 dark:bg-slate-900/50 backdrop-blur shrink-0">
-          <h1 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background transition-colors duration-200">
+        <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-white dark:bg-[#1c1c1c] backdrop-blur shrink-0">
+          <h1 className="text-lg font-medium text-foreground">
             {navItems.find((i) => i.path === location.pathname)?.label || 
              (location.pathname === "/settings" && "Global Settings") || 
              (location.pathname === "/dashboard" && "Home") ||
@@ -221,42 +221,39 @@ export function Layout() {
               onClick={toggleMode}
               title={`Click to switch to ${userPreferences.mode === 'demo' ? 'Live' : 'Demo'} mode`}
               className={cn(
-                "hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border cursor-pointer transition-all hover:shadow-md",
+                "hidden md:flex items-center gap-1.5 px-3 py-1 rounded-[2px] text-[10px] font-bold tracking-[0.1em] uppercase border cursor-pointer transition-all hover:shadow-sm",
                 userPreferences.mode === 'demo' 
-                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50" 
-                  : "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50"
+                  ? "bg-secondary text-primary border-primary/20 hover:bg-muted" 
+                  : "bg-red-50 dark:bg-red-900/30 text-primary border-primary/20 hover:bg-red-100 dark:hover:bg-red-900/50"
               )}
             >
-              <div className={cn(
-                "w-1.5 h-1.5 rounded-full animate-pulse",
-                userPreferences.mode === 'demo' ? "bg-indigo-500" : "bg-rose-500"
-              )}></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
               {userPreferences.mode} MODE
             </button>
 
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-full bg-slate-200/50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
+              className="p-2 rounded-[2px] bg-muted hover:bg-border/50 text-muted-foreground transition-colors"
               title="Toggle Theme"
             >
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             
-            <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+            <div className="h-6 w-px bg-border mx-1"></div>
             
             <div className="flex items-center gap-3 pl-1">
               <div className="hidden sm:flex flex-col items-end leading-tight">
-                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Jane Doe</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">AI Researcher</span>
+                <span className="text-sm font-semibold text-foreground">Jane Doe</span>
+                <span className="text-xs text-muted-foreground">AI Researcher</span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-700 dark:text-indigo-400 shadow-sm cursor-pointer">
+              <div className="w-8 h-8 rounded-[2px] bg-secondary border border-border flex items-center justify-center text-primary shadow-sm cursor-pointer">
                 <User size={16} />
               </div>
               <button 
                 onClick={() => navigate("/settings")}
                 className={cn(
-                  "p-1.5 transition-colors rounded-md", 
-                  location.pathname === "/settings" ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30" : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  "p-1.5 transition-colors rounded-[2px]", 
+                  location.pathname === "/settings" ? "text-primary bg-secondary" : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Settings"
               >
@@ -266,7 +263,7 @@ export function Layout() {
           </div>
         </header>
         
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-transparent">
+        <div className="flex-1 overflow-y-auto p-6 bg-background">
           <Outlet context={{ 
             datasets, 
             addDatasetItem, 
