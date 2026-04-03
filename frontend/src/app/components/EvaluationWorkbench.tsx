@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router";
-import { Play, Square, Code, AlignLeft, ListMusic, Database, Info, FileAudio, RotateCcw, FastForward, Timer } from "lucide-react";
+import { Play, Square, Code, AlignLeft, ListMusic, Database, Info, FileAudio, RotateCcw, FastForward, Timer, RefreshCw } from "lucide-react";
 import { Card, Button, Label, Select, Textarea, cn } from "./ui";
 import { AudioWaveform } from "./AudioWaveform";
 import type { AppContextType } from "./Layout";
 
 const initialSegments = [
-  { id: 1, start: 0.0, end: 2.5, speaker: "Speaker 0", lang: "en", text: "I feel like this is my second home.", originalText: "I feel like this is my second home." },
-  { id: 2, start: 2.5, end: 5.1, speaker: "Speaker 1", lang: "en", text: "That's exactly what we wanted to achieve with the new design.", originalText: "That's exactly what we wanted to achieve with the new design." },
-  { id: 3, start: 5.1, end: 8.4, speaker: "Speaker 0", lang: "en", text: "It really shows. The latency has improved dramatically since the last update.", originalText: "It really shows. The latency has improved dramatically since the last update." },
-  { id: 4, start: 8.4, end: 11.0, speaker: "Speaker 1", lang: "en", text: "We're aiming for sub-200 milliseconds by Q3.", originalText: "We're aiming for sub-200 milliseconds by Q3." },
+  { id: 1, start: 0.0, end: 2.5, speaker: "Speaker 0", lang: "en", text: "I feel like this is my second home.", originalText: "I feel like this is my second home.", history: [{ model: "vibevoice-v2", lang: "en", text: "I feel like this is my second home.", timestamp: new Date().toISOString() }] },
+  { id: 2, start: 2.5, end: 5.1, speaker: "Speaker 1", lang: "en", text: "That's exactly what we wanted to achieve with the new design.", originalText: "That's exactly what we wanted to achieve with the new design.", history: [{ model: "vibevoice-v2", lang: "en", text: "That's exactly what we wanted to achieve with the new design.", timestamp: new Date().toISOString() }] },
+  { id: 3, start: 5.1, end: 8.4, speaker: "Speaker 0", lang: "en", text: "It really shows. The latency has improved dramatically since the last update.", originalText: "It really shows. The latency has improved dramatically since the last update.", history: [{ model: "vibevoice-v2", lang: "en", text: "It really shows. The latency has improved dramatically since the last update.", timestamp: new Date().toISOString() }] },
+  { id: 4, start: 8.4, end: 11.0, speaker: "Speaker 1", lang: "en", text: "We're aiming for sub-200 milliseconds by Q3.", originalText: "We're aiming for sub-200 milliseconds by Q3.", history: [{ model: "vibevoice-v2", lang: "en", text: "We're aiming for sub-200 milliseconds by Q3.", timestamp: new Date().toISOString() }] },
 ];
 
 export function EvaluationWorkbench() {
@@ -33,6 +33,7 @@ export function EvaluationWorkbench() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
 
   // Sync if global preferences change
   useEffect(() => {
@@ -95,6 +96,12 @@ export function EvaluationWorkbench() {
   const handleSegmentTextChange = (id: number, newText: string) => {
     setSegments(prev => prev.map(seg => 
       seg.id === id ? { ...seg, text: newText } : seg
+    ));
+  };
+  
+  const handleSegmentLangChange = (id: number, newLang: string) => {
+    setSegments(prev => prev.map(seg => 
+      seg.id === id ? { ...seg, lang: newLang } : seg
     ));
   };
   
@@ -290,6 +297,8 @@ export function EvaluationWorkbench() {
           <Button variant="ghost" size="sm" onClick={() => handleSeek(0)} disabled={!hasResults} className="shrink-0">
             <RotateCcw size={14} className="mr-1.5" /> Reset
           </Button>
+
+
         </div>
 
         {hasResults && !isTranscribing && (
@@ -413,11 +422,54 @@ export function EvaluationWorkbench() {
                             placeholder="Edit transcription..."
                           />
                           <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover/edit:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm h-7">
+                              <Select 
+                                className="h-6 text-[10px] py-0 pl-2 pr-6 border-0 bg-transparent focus:ring-0" 
+                                value={seg.lang}
+                                onChange={(e) => handleSegmentLangChange(seg.id, e.target.value)}
+                              >
+                                <option value="auto">Auto</option>
+                                <option value="en">EN</option>
+                                <option value="zh">ZH</option>
+                                <option value="yue">YUE</option>
+                                <option value="de">DE</option>
+                                <option value="fr">FR</option>
+                                <option value="it">IT</option>
+                              </Select>
+                              <div className="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 w-6 p-0 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-500 hover:text-indigo-600 rounded-l-none"
+                                title="Retry Language Detection & Transcription"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSegmentTextChange(seg.id, "(Retrying...)");
+                                  setTimeout(() => {
+                                    setSegments(prev => prev.map(s => {
+                                      if (s.id === seg.id) {
+                                        const newText = `${s.originalText} (Retried [${s.lang}] via ${model})`;
+                                        const newHistory = [...(s.history || []), {
+                                          model: model,
+                                          lang: s.lang,
+                                          text: newText,
+                                          timestamp: new Date().toISOString()
+                                        }];
+                                        return { ...s, text: newText, history: newHistory };
+                                      }
+                                      return s;
+                                    }));
+                                  }, 1000);
+                                }}
+                              >
+                                <RefreshCw size={12} />
+                              </Button>
+                            </div>
                             {seg.text !== seg.originalText && (
                               <Button 
                                 size="sm" 
                                 variant="ghost" 
-                                className="h-6 px-2 text-[10px] text-slate-500 hover:text-slate-900"
+                                className="h-7 px-2 text-[10px] text-slate-500 hover:text-slate-900 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSegmentTextChange(seg.id, seg.originalText);
@@ -435,8 +487,10 @@ export function EvaluationWorkbench() {
                         )}>{seg.text}</p>
                       )}
                     </div>
-                    <div className="sm:w-12 shrink-0 flex items-center justify-center bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 p-2 group-hover/seg:border-indigo-300 dark:group-hover/seg:border-indigo-700 transition-colors">
-                      <Play size={16} className={cn(activeSegmentId === seg.id && isPlaying ? "text-indigo-600 fill-indigo-600" : "text-slate-400")} />
+                    <div className="sm:w-auto shrink-0 flex items-center gap-1.5">
+                      <div className="flex items-center justify-center bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 p-2 group-hover/seg:border-indigo-300 dark:group-hover/seg:border-indigo-700 transition-colors">
+                        <Play size={16} className={cn(activeSegmentId === seg.id && isPlaying ? "text-indigo-600 fill-indigo-600" : "text-slate-400")} />
+                      </div>
                     </div>
                   </div>
                 ))}

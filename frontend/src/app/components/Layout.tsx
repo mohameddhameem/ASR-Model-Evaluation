@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
-import { Mic, Headphones, BarChart2, Globe, Menu, ChevronLeft, Bot, Sun, Moon, Settings as SettingsIcon, User, BrainCircuit, ServerCog, Database } from "lucide-react";
+import { Mic, Headphones, BarChart2, Menu, ChevronLeft, Bot, Sun, Moon, Settings as SettingsIcon, User, BrainCircuit, ServerCog, Home } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "./ui";
@@ -39,13 +39,11 @@ export type AppContextType = {
 };
 
 const navItems = [
-  { path: "/", label: "Evaluation Workbench", icon: Mic },
-  { path: "/operations", label: "Operations Dashboard", icon: ServerCog },
-  { path: "/datasets", label: "Dataset Overview", icon: Database },
-  { path: "/training", label: "Speech Training", icon: Headphones },
-  { path: "/language-id", label: "Language ID Training", icon: Globe },
-  { path: "/retraining", label: "Model Retraining", icon: BrainCircuit },
-  { path: "/analytics", label: "Model Analytics", icon: BarChart2 },
+  { path: "/dashboard", label: "Home", icon: Home, badge: null },
+  { path: "/", label: "Workbench", icon: Mic, badge: "Single" },
+  { path: "/operations", label: "Batch Ops", icon: ServerCog, badge: "Batch" },
+  { path: "/training", label: "Training", icon: BrainCircuit, badge: null },
+  { path: "/analytics", label: "Analytics", icon: BarChart2, badge: null },
 ];
 
 const INITIAL_DATASETS: DatasetItem[] = [
@@ -117,8 +115,12 @@ export function Layout() {
     setDatasets((prev) => prev.map(d => d.id === id ? { ...d, ...updates } : d));
   };
 
-  const hideSidebarRoutes = ["/operations", "/datasets"];
+  const hideSidebarRoutes = ["/operations", "/datasets", "/analytics", "/retraining", "/language-id", "/settings", "/dashboard", "/training"];
   const showDatasetSidebar = !hideSidebarRoutes.includes(location.pathname);
+
+  const toggleMode = () => {
+    setUserPreferences(prev => ({ ...prev, mode: prev.mode === 'demo' ? 'live' : 'demo' }));
+  };
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 overflow-hidden font-sans transition-colors duration-200">
@@ -153,7 +155,8 @@ export function Layout() {
 
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path ||
+              (item.path === "/dashboard" && location.pathname === "/dashboard");
             const Icon = item.icon;
             return (
               <Link
@@ -165,10 +168,15 @@ export function Layout() {
                     ? "bg-indigo-100 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-400 font-medium"
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
                 )}
-                title={collapsed ? item.label : undefined}
+                title={item.label}
               >
-                <Icon size={18} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100"} />
-                {!collapsed && <span>{item.label}</span>}
+                <Icon size={22} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100"} />
+                {!collapsed && <span className="flex-1">{item.label}</span>}
+                {!collapsed && item.badge && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -202,24 +210,29 @@ export function Layout() {
           <h1 className="text-lg font-medium text-slate-900 dark:text-slate-100">
             {navItems.find((i) => i.path === location.pathname)?.label || 
              (location.pathname === "/settings" && "Global Settings") || 
+             (location.pathname === "/dashboard" && "Home") ||
              "ASR Platform"}
           </h1>
           
           {/* User & Settings Panel */}
           <div className="flex items-center gap-4">
-            {/* Mode Indicator */}
-            <div className={cn(
-              "hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border",
-              userPreferences.mode === 'demo' 
-                ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800" 
-                : "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800"
-            )}>
+            {/* Mode Indicator — clickable to toggle */}
+            <button
+              onClick={toggleMode}
+              title={`Click to switch to ${userPreferences.mode === 'demo' ? 'Live' : 'Demo'} mode`}
+              className={cn(
+                "hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border cursor-pointer transition-all hover:shadow-md",
+                userPreferences.mode === 'demo' 
+                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50" 
+                  : "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50"
+              )}
+            >
               <div className={cn(
                 "w-1.5 h-1.5 rounded-full animate-pulse",
                 userPreferences.mode === 'demo' ? "bg-indigo-500" : "bg-rose-500"
               )}></div>
               {userPreferences.mode} MODE
-            </div>
+            </button>
 
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}

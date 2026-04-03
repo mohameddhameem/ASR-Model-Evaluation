@@ -42,6 +42,7 @@ export function OperationsDashboard() {
   // Filters for left column
   const [dateFilter, setDateFilter] = useState("");
   const [langFilter, setLangFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Job specific configuration
   const [jobConfig, setJobConfig] = useState({
@@ -313,15 +314,20 @@ export function OperationsDashboard() {
     }
   };
 
-  const filteredFiles = stagedFiles.filter(f => {
+  const filteredFiles = [...backendQueue, ...stagedFiles].filter(item => {
     // Check Date
     if (dateFilter) {
-      const fDate = f.uploadDate.split('T')[0];
-      if (fDate !== dateFilter) return false;
+      const itemDate = (item.upload_time || item.uploadDate || item.created_at || "").split('T')[0];
+      if (itemDate !== dateFilter) return false;
     }
     // Check Lang
     if (langFilter !== "all") {
-      if (!f.results || f.results.language !== langFilter) return false;
+      const itemLang = item.language || item.results?.language;
+      if (itemLang !== langFilter) return false;
+    }
+    // Check Status
+    if (statusFilter !== "all") {
+      if (item.status !== statusFilter) return false;
     }
     return true;
   });
@@ -406,38 +412,37 @@ export function OperationsDashboard() {
 
         <div className="hidden md:block w-px h-12 bg-slate-200 dark:bg-slate-800"></div>
 
-        {/* Config Area */}
-        <div className="flex-1 flex gap-4 w-full">
-          <div className="space-y-1.5 flex-1">
-            <Label className="text-xs text-slate-500">ASR Model</Label>
+        {/* Filters */}
+        <div className="flex-1 flex gap-3 w-full">
+          <div className="space-y-1 flex-1">
+            <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Status</Label>
             <Select 
-              className="h-9 text-sm" 
-              value={jobConfig.asrModel}
-              onChange={(e) => setJobConfig({...jobConfig, asrModel: e.target.value})}
-              disabled={globalStatus === "processing"}
+              className="h-8 text-xs" 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="auto">Auto-Fast</option>
-              <option value="whisper">Whisper V3 Large</option>
-              <option value="vibe">VibeVoice</option>
+              <option value="all">All Statuses</option>
+              <option value="completed">Completed</option>
+              <option value="processing">Processing</option>
+              <option value="queued">Queued</option>
             </Select>
           </div>
-          <div className="space-y-1.5 flex-1">
-            <Label className="text-xs text-slate-500">Target Language</Label>
+          <div className="space-y-1 flex-1">
+            <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Language</Label>
             <Select 
-              className="h-9 text-sm"
-              value={jobConfig.targetLanguage}
-              onChange={(e) => setJobConfig({...jobConfig, targetLanguage: e.target.value})}
-              disabled={globalStatus === "processing"}
+              className="h-8 text-xs"
+              value={langFilter}
+              onChange={(e) => setLangFilter(e.target.value)}
             >
-              <option value="auto">Auto-Detect (LID)</option>
-              <option value="en">English</option>
-              <option value="zh">Mandarin</option>
-              <option value="fr">French</option>
+              <option value="all">All Languages</option>
+              <option value="en">English (EN)</option>
+              <option value="zh">Mandarin (ZH)</option>
+              <option value="fr">French (FR)</option>
             </Select>
           </div>
         </div>
 
-        <div className="hidden md:block w-px h-12 bg-slate-200 dark:bg-slate-800"></div>
+        <div className="hidden md:block w-px h-10 bg-slate-200 dark:bg-slate-800"></div>
 
         {/* Actions Area */}
         <div className="flex gap-3 md:w-auto w-full md:justify-end shrink-0 pt-5 md:pt-0">
@@ -489,30 +494,26 @@ export function OperationsDashboard() {
               </h3>
             </div>
             
-            {/* Filters */}
+            {/* Date Search */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                  <Filter size={14} className="text-slate-400" />
+                  <Search size={14} className="text-slate-400" />
                 </div>
+                <Input 
+                  type="text" 
+                  placeholder="Filter by filename..."
+                  className="pl-8 h-8 text-xs w-full"
+                />
+              </div>
+              <div className="relative w-32">
                 <Input 
                   type="date" 
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="pl-8 h-8 text-xs w-full"
+                  className="h-8 text-xs w-full"
                 />
               </div>
-              <Select 
-                value={langFilter}
-                onChange={(e) => setLangFilter(e.target.value)}
-                className="h-8 text-xs flex-1 py-0"
-              >
-                <option value="all">All Languages</option>
-                <option value="en">English (en)</option>
-                <option value="fr">French (fr)</option>
-                <option value="de">German (de)</option>
-                <option value="zh">Mandarin (zh)</option>
-              </Select>
             </div>
           </div>
 
@@ -533,18 +534,7 @@ export function OperationsDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                {/* Combined and Filtered List */}
-                {[...backendQueue, ...stagedFiles]
-                  .filter(item => {
-                    const itemDate = (item.upload_time || item.uploadDate || item.created_at || "").split('T')[0];
-                    if (dateFilter && itemDate !== dateFilter) return false;
-                    
-                    const itemLang = item.language || item.results?.language;
-                    if (langFilter !== "all" && itemLang !== langFilter) return false;
-                    
-                    return true;
-                  })
-                  .map(item => {
+                {filteredFiles.map(item => {
                     const isJob = 'job_id' in item;
                     const id = isJob ? item.job_id : item.id;
                     const name = isJob ? item.filename : item.name;
@@ -770,12 +760,38 @@ export function OperationsDashboard() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-10 text-slate-500">
-              <AlertCircle size={32} className="text-slate-300 dark:text-slate-700 mb-3" />
-              <h3 className="text-sm font-medium text-slate-900 dark:text-slate-200 mb-1">Select a processed file</h3>
-              <p className="text-xs text-slate-500 max-w-xs">
-                Click on any completed file in the queue to view its segment-by-segment transcription and translation breakdown.
-              </p>
+            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-transparent">
+              <div className="bg-white dark:bg-slate-900/50 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 max-w-sm w-full">
+                <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mb-5">
+                  <Play size={20} className="ml-1" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Getting Started</h3>
+                <p className="text-sm text-slate-500 mb-6 font-medium">Process multiple audio files through the pipeline:</p>
+                
+                <div className="space-y-5 text-left">
+                  <div className="flex items-start gap-4">
+                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">1</div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Upload Media</h4>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">Click "Browse Files..." to queue audio or video files.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">2</div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Run Processing</h4>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">Hit "Process All" to run your selected ASR model.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">3</div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Review Output</h4>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">Click any "Done" file in the queue to inspect segments.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </Card>

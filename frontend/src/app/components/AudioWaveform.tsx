@@ -67,15 +67,22 @@ export function AudioWaveform({
       const endX = (seg.end / duration) * width;
       const isActive = seg.id === activeSegmentId;
 
-      ctx.fillStyle = isActive 
-        ? 'rgba(79, 70, 229, 0.15)' 
-        : 'rgba(79, 70, 229, 0.05)';
+      const getSpeakerColor = (speakerName: string, active: boolean) => {
+          let alphaBg = active ? '0.2' : '0.08';
+          let alphaBorder = active ? '0.5' : '0.2';
+          if (speakerName.includes("0")) return { bg: `rgba(79, 70, 229, ${alphaBg})`, border: `rgba(79, 70, 229, ${alphaBorder})`, label: '#6366f1' }; // Indigo
+          if (speakerName.includes("1")) return { bg: `rgba(16, 185, 129, ${alphaBg})`, border: `rgba(16, 185, 129, ${alphaBorder})`, label: '#10b981' }; // Emerald
+          if (speakerName.includes("2")) return { bg: `rgba(245, 158, 11, ${alphaBg})`, border: `rgba(245, 158, 11, ${alphaBorder})`, label: '#f59e0b' }; // Amber
+          return { bg: `rgba(148, 163, 184, ${alphaBg})`, border: `rgba(148, 163, 184, ${alphaBorder})`, label: '#94a3b8' }; // Slate
+      }
+
+      const colors = getSpeakerColor(seg.speaker, isActive);
+
+      ctx.fillStyle = colors.bg;
       ctx.fillRect(startX, 0, endX - startX, height);
       
       // Draw segment borders
-      ctx.strokeStyle = isActive 
-        ? 'rgba(79, 70, 229, 0.4)' 
-        : 'rgba(79, 70, 229, 0.1)';
+      ctx.strokeStyle = colors.border;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(startX, 0);
@@ -83,6 +90,16 @@ export function AudioWaveform({
       ctx.moveTo(endX, 0);
       ctx.lineTo(endX, height);
       ctx.stroke();
+
+      // Draw Speaker Label
+      // We'll draw it near the top left of each segment region
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = colors.label;
+      const labelText = seg.speaker.replace('peaker ', 'PK').toUpperCase();
+      // only draw if the segment is wide enough to fit the text
+      if (endX - startX > 30) {
+          ctx.fillText(labelText, startX + 4, 14);
+      }
     });
 
     // Draw waveform bars

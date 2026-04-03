@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import { Activity, Clock, Cpu, Filter, Zap, TrendingDown, TrendingUp, Download } from "lucide-react";
-import { Card, Select, Badge, Button } from "./ui";
+import { Card, Select, Badge, Button, cn } from "./ui";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
@@ -123,11 +123,27 @@ Generated on: ${new Date().toISOString()}
         </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5">
+          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 shrink-0">
             <Filter size={14} className="text-slate-500 dark:text-slate-400" />
             <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Models:</span>
-            <Badge variant="default" className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">Whisper V3</Badge>
-            <Badge variant="default" className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">VibeVoice</Badge>
+            <button 
+              onClick={() => setSelectedModels(prev => ({...prev, whisper: !prev.whisper}))}
+              className={cn("text-[10px] px-2 py-0.5 rounded-full border transition-colors", selectedModels.whisper ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-bold" : "bg-transparent text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800")}
+            >
+              Whisper V3
+            </button>
+            <button 
+              onClick={() => setSelectedModels(prev => ({...prev, vibeVoice: !prev.vibeVoice}))}
+              className={cn("text-[10px] px-2 py-0.5 rounded-full border transition-colors", selectedModels.vibeVoice ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-bold" : "bg-transparent text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800")}
+            >
+              VibeVoice
+            </button>
+            <button 
+              onClick={() => setSelectedModels(prev => ({...prev, azure: !prev.azure}))}
+              className={cn("text-[10px] px-2 py-0.5 rounded-full border transition-colors", selectedModels.azure ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 font-bold" : "bg-transparent text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800")}
+            >
+              Azure
+            </button>
           </div>
           
           <Select className="w-36 h-8 text-xs py-0" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
@@ -226,8 +242,9 @@ Generated on: ${new Date().toISOString()}
                 itemStyle={{ color: chartTooltipText }}
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Bar dataKey="whisper" name="Whisper V3 Large" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
-              <Bar dataKey="vibeVoice" name="VibeVoice" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+              {selectedModels.whisper && <Bar dataKey="whisper" name="Whisper V3 Large" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />}
+              {selectedModels.vibeVoice && <Bar dataKey="vibeVoice" name="VibeVoice" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />}
+              {selectedModels.azure && <Bar dataKey="azure" name="Azure" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -256,9 +273,9 @@ Generated on: ${new Date().toISOString()}
                 itemStyle={{ color: chartTooltipText }}
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Bar dataKey="whisper" name="Whisper V3" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={35} />
-              <Bar dataKey="vibeVoice" name="VibeVoice" fill="#10b981" radius={[4, 4, 0, 0]} barSize={35} />
-              <Bar dataKey="azure" name="Azure" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={35} />
+              {selectedModels.whisper && <Bar dataKey="whisper" name="Whisper V3" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={35} />}
+              {selectedModels.vibeVoice && <Bar dataKey="vibeVoice" name="VibeVoice" fill="#10b981" radius={[4, 4, 0, 0]} barSize={35} />}
+              {selectedModels.azure && <Bar dataKey="azure" name="Azure" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={35} />}
             </BarChart>
           </ResponsiveContainer>
         </div>
