@@ -168,6 +168,29 @@ app.get('/api/analytics/models', (req, res) => {
   res.json(enrichedModels);
 });
 
+// Training Pipeline Trigger
+app.post('/api/training/trigger', (req, res) => {
+  const { model_id, target_wer } = req.body;
+  
+  console.log(`🚀 Triggering optimization for model: ${model_id}, Target WER: ${target_wer}%`);
+  
+  // Simulate improvement in global analytics
+  if (mockAnalyticsData.performance_metrics) {
+    const currentWer = mockAnalyticsData.performance_metrics.average_wer;
+    const improvement = (currentWer - target_wer) * 0.5; // partially achieve the goal
+    mockAnalyticsData.performance_metrics.average_wer = parseFloat((currentWer - improvement).toFixed(2));
+  }
+  
+  res.json({
+    status: 'success',
+    job_id: `train-${Math.random().toString(36).substring(7)}`,
+    message: `Optimization initiated for ${model_id}. Local metrics will reflect improvement upon completion.`,
+    metrics_delta: {
+      wer_improvement: -0.15
+    }
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`✅ ASR Model Evaluation API running on http://localhost:${PORT}`);

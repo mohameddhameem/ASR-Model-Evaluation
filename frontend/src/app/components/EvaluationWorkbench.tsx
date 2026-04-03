@@ -1,11 +1,29 @@
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router";
-import { Play, Square, Code, AlignLeft, ListMusic, Database, Info, FileAudio, RotateCcw, FastForward, Timer, RefreshCw, Settings2, ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
+import { Play, Square, Code, AlignLeft, ListMusic, Timer, RefreshCw, Settings2, RotateCcw, CheckCircle, Database, FileAudio, Info } from "lucide-react";
 import { Card, Button, Label, Select, Textarea, cn } from "./ui";
 import { AudioWaveform } from "./AudioWaveform";
 import type { AppContextType } from "./Layout";
 
-const initialSegments = [
+type Segment = {
+  id: number;
+  start: number;
+  end: number;
+  speaker: string;
+  lang: string;
+  text: string;
+  originalText: string;
+  history: {
+    model: string;
+    lang: string;
+    text: string;
+    timestamp: string;
+  }[];
+  comparisonText?: string;
+  comparisonModel?: string;
+};
+
+const initialSegments: Segment[] = [
   { id: 1, start: 0.0, end: 2.5, speaker: "Speaker 0", lang: "en", text: "I feel like this is my second home.", originalText: "I feel like this is my second home.", history: [{ model: "vibevoice-v2", lang: "en", text: "I feel like this is my second home.", timestamp: new Date().toISOString() }] },
   { id: 2, start: 2.5, end: 5.1, speaker: "Speaker 1", lang: "en", text: "That's exactly what we wanted to achieve with the new design.", originalText: "That's exactly what we wanted to achieve with the new design.", history: [{ model: "vibevoice-v2", lang: "en", text: "That's exactly what we wanted to achieve with the new design.", timestamp: new Date().toISOString() }] },
   { id: 3, start: 5.1, end: 8.4, speaker: "Speaker 0", lang: "en", text: "It really shows. The latency has improved dramatically since the last update.", originalText: "It really shows. The latency has improved dramatically since the last update.", history: [{ model: "vibevoice-v2", lang: "en", text: "It really shows. The latency has improved dramatically since the last update.", timestamp: new Date().toISOString() }] },
@@ -17,13 +35,14 @@ export function EvaluationWorkbench() {
   const [activeTab, setActiveTab] = useState<"raw" | "segments" | "translation">("segments");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [hasResults, setHasResults] = useState(true);
-  const [segments, setSegments] = useState(initialSegments);
+  const [segments, setSegments] = useState<Segment[]>(initialSegments);
   
   // Retrigger & Verification states
   const [isRetriggerPanelOpen, setIsRetriggerPanelOpen] = useState(false);
   const [retriggerModel, setRetriggerModel] = useState("whisper");
   const [retriggerLang, setRetriggerLang] = useState("en");
   const [isLidVerified, setIsLidVerified] = useState(false);
+  const [comparisonMode, setComparisonMode] = useState(false);
   
   // Local state initialized with user preferences
   const [model, setModel] = useState(userPreferences.asrModel);
@@ -109,6 +128,46 @@ export function EvaluationWorkbench() {
     setSegments(prev => prev.map(seg => 
       seg.id === id ? { ...seg, lang: newLang } : seg
     ));
+  };
+
+  const getDiffHighlightedText = (original: string, comparison: string) => {
+    if (!comparison) return original;
+    const origWords = original.split(' ');
+    const compWords = comparison.split(' ');
+    
+    return compWords.map((word, i) => {
+      const isDifferent = word !== origWords[i];
+      return (
+        <span key={i} className={cn(isDifferent ? "bg-yellow-200 dark:bg-yellow-900/40 px-0.5 rounded-[1px]" : "")}>
+          {word}{' '}
+        </span>
+      );
+    });
+  };
+
+  const handleRunRetrigger = () => {
+    setIsRetriggerPanelOpen(false);
+    setIsTranscribing(true);
+    
+    setTimeout(() => {
+      setIsTranscribing(false);
+      setHasResults(true);
+      setIsLidVerified(true);
+      setComparisonMode(true);
+      
+      setSegments(prev => prev.map(seg => {
+        // Mock a slightly different transcription for comparison
+        let compText = seg.text;
+        if (seg.id === 1) compText = "I feel like this is my second workspace.";
+        if (seg.id === 3) compText = "It really shows. The performance has improved dramatically since the last update.";
+        
+        return {
+          ...seg,
+          comparisonText: compText,
+          comparisonModel: retriggerModel
+        };
+      }));
+    }, 2000);
   };
   
   const selectedFile = datasets.find(d => d.id === activeDatasetId);
@@ -368,11 +427,7 @@ export function EvaluationWorkbench() {
             </div>
             <Button 
               className="w-full md:w-auto h-8 px-6 bg-primary text-white hover:bg-primary/90 rounded-[2px] uppercase tracking-widest text-[10px]"
-              onClick={() => {
-                setIsRetriggerPanelOpen(false);
-                setIsTranscribing(true);
-                setTimeout(() => { setIsTranscribing(false); setHasResults(true); setIsLidVerified(true); }, 2000);
-              }}
+              onClick={handleRunRetrigger}
             >
               <RefreshCw size={12} className="mr-2" /> Re-Run Transcription
             </Button>
@@ -552,10 +607,24 @@ export function EvaluationWorkbench() {
                           </div>
                         </div>
                       ) : (
-                        <p className={cn(
-                          "text-sm leading-relaxed transition-colors",
-                          activeSegmentId === seg.id ? "text-foreground" : "text-foreground/80"
-                        )}>{seg.text}</p>
+                        <div className={cn("grid gap-4", comparisonMode ? "grid-cols-2" : "grid-cols-1")}>
+                          <div className={cn("space-y-1.5", comparisonMode && "p-2 bg-muted/20 border border-border rounded-[2px]")}>
+                            {comparisonMode && <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Baseline (VibeVoice)</span>}
+                            <p className={cn(
+                              "text-sm leading-relaxed transition-colors",
+                              activeSegmentId === seg.id ? "text-foreground" : "text-foreground/80"
+                            )}>{seg.text}</p>
+                          </div>
+                          
+                          {comparisonMode && seg.comparisonText && (
+                            <div className="space-y-1.5 p-2 bg-primary/[0.03] border border-primary/20 rounded-[2px] animate-in fade-in slide-in-from-right-2">
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-primary block mb-1">Retrigger ({seg.comparisonModel?.toUpperCase() || "N/A"})</span>
+                              <p className="text-sm leading-relaxed text-foreground">
+                                {getDiffHighlightedText(seg.text, seg.comparisonText)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                     <div className="sm:w-auto shrink-0 flex items-center gap-1.5">

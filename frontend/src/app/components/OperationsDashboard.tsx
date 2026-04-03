@@ -13,12 +13,15 @@ type Segment = {
   translation: string;
 };
 
+type ProcessingStage = "idle" | "ingesting" | "acoustic-analysis" | "language-id" | "diarization" | "transcription" | "completed" | "error";
+
 type StagedFile = {
   id: string;
   file: File;
   name: string;
   size: string;
-  status: "idle" | "processing" | "completed" | "error";
+  status: ProcessingStage;
+  progress: number;
   uploadDate: string; // ISO format
   results?: {
     language: string;
@@ -26,6 +29,8 @@ type StagedFile = {
     duration: string;
     numSpeakers: number;
     segments: Segment[];
+    snr?: string;
+    rtf?: string;
   };
 };
 
@@ -151,6 +156,7 @@ export function OperationsDashboard() {
         name: file.name,
         size: (file.size / (1024 * 1024)).toFixed(1) + " MB",
         status: "idle",
+        progress: 0,
         uploadDate: new Date().toISOString()
       }));
       setStagedFiles(prev => [...prev, ...newFiles]);
@@ -162,59 +168,87 @@ export function OperationsDashboard() {
 
   const handleProcessAll = () => {
     setGlobalStatus("processing");
-    setStagedFiles(prev => prev.map(f => f.status === "idle" ? { ...f, status: "processing" } : f));
-
+    
     stagedFiles.forEach((file, index) => {
       if (file.status !== "idle") return;
       
-      setTimeout(() => {
-        setStagedFiles(prev => {
-          const updated = [...prev];
-          const fileIndex = updated.findIndex(f => f.id === file.id);
-          if (fileIndex > -1) {
-            const lang = jobConfig.targetLanguage === "auto" 
-              ? ["en", "fr", "de", "zh"][Math.floor(Math.random() * 4)] 
-              : jobConfig.targetLanguage;
+      const stages: ProcessingStage[] = [
+        "ingesting", 
+        "acoustic-analysis", 
+        "language-id", 
+        "diarization", 
+        "transcription", 
+        "completed"
+      ];
+      
+      let stageIndex = 0;
+      
+      const processNextStage = () => {
+        if (stageIndex >= stages.length) return;
+        
+        const nextStage = stages[stageIndex];
+        const progress = Math.round(((stageIndex + 1) / stages.length) * 100);
+        
+        setStagedFiles(prev => prev.map(f => 
+          f.id === file.id ? { ...f, status: nextStage, progress } : f
+        ));
+        
+        stageIndex++;
+        
+        if (nextStage === "completed") {
+          // Finalize results
+          setStagedFiles(prev => {
+            const updated = [...prev];
+            const fileIndex = updated.findIndex(f => f.id === file.id);
+            if (fileIndex > -1) {
+              const lang = jobConfig.targetLanguage === "auto" 
+                ? ["en", "fr", "de", "zh"][Math.floor(Math.random() * 4)] 
+                : jobConfig.targetLanguage;
 
-            const numSpeakers = Math.floor(Math.random() * 3) + 1;
-            const mockDurationSecs = Math.floor(Math.random() * 180) + 30; // 30s to 210s
-            const formattedDuration = `${Math.floor(mockDurationSecs / 60)}:${(mockDurationSecs % 60).toString().padStart(2, '0')}`;
+              const numSpeakers = Math.floor(Math.random() * 3) + 1;
+              const mockDurationSecs = Math.floor(Math.random() * 180) + 30;
+              const formattedDuration = `${Math.floor(mockDurationSecs / 60)}:${(mockDurationSecs % 60).toString().padStart(2, '0')}`;
 
-            // Generate mock segments
-            const mockSegments: Segment[] = [];
-            let currentTime = 0;
-            for (let i = 0; i < 6; i++) {
-              const dur = Math.random() * 4 + 2; 
-              mockSegments.push({
-                id: `seg-${Math.random().toString(36).substring(7)}`,
-                start: currentTime,
-                end: currentTime + dur,
-                speaker: `Speaker ${Math.floor(Math.random() * numSpeakers)}`,
-                transcription: `This is a mock transcribed sentence number ${i + 1} for the uploaded media.`,
-                translation: `Ceci est une phrase traduite fictive numéro ${i + 1} pour le média téléchargé.`
-              });
-              currentTime += dur + (Math.random() * 0.5);
-            }
-
-            updated[fileIndex] = {
-              ...updated[fileIndex],
-              status: "completed",
-              results: {
-                language: lang,
-                confidence: 0.85 + (Math.random() * 0.14),
-                duration: formattedDuration,
-                numSpeakers,
-                segments: mockSegments
+              const mockSegments: Segment[] = [];
+              let currentTime = 0;
+              for (let i = 0; i < 6; i++) {
+                const dur = Math.random() * 4 + 2; 
+                mockSegments.push({
+                  id: `seg-${Math.random().toString(36).substring(7)}`,
+                  start: currentTime,
+                  end: currentTime + dur,
+                  speaker: `Speaker ${Math.floor(Math.random() * numSpeakers)}`,
+                  transcription: `This is a mock transcribed sentence number ${i + 1} for the uploaded media.`,
+                  translation: `Ceci est une phrase traduite fictive numéro ${i + 1} pour le média téléchargé.`
+                });
+                currentTime += dur + (Math.random() * 0.5);
               }
-            };
-          }
-          
-          if (updated.every(f => f.status === "completed" || f.status === "error")) {
-            setGlobalStatus("completed");
-          }
-          return updated;
-        });
-      }, 1000 + (index * 600)); // fast processing for demo
+
+              updated[fileIndex] = {
+                ...updated[fileIndex],
+                results: {
+                  language: lang,
+                  confidence: 0.85 + (Math.random() * 0.14),
+                  duration: formattedDuration,
+                  numSpeakers,
+                  segments: mockSegments,
+                  snr: (25 + Math.random() * 10).toFixed(1),
+                  rtf: (0.05 + Math.random() * 0.05).toFixed(3)
+                }
+              };
+            }
+            
+            if (updated.every(f => f.status === "completed" || f.status === "error")) {
+              setGlobalStatus("completed");
+            }
+            return updated;
+          });
+        } else {
+          setTimeout(processNextStage, 800 + Math.random() * 1200);
+        }
+      };
+      
+      processNextStage();
     });
   };
 
@@ -353,7 +387,7 @@ export function OperationsDashboard() {
   // Combine backend queue with staged files for display
   const allFiles = backendQueue;
   const totalFiles = stagedFiles.length + backendQueue.length;
-  const processingFiles = stagedFiles.filter(f => f.status === "processing").length + 
+  const processingFiles = stagedFiles.filter(f => f.status !== "idle" && f.status !== "completed" && f.status !== "error").length + 
                          backendQueue.filter(j => j.status === "processing").length;
   const completedFiles = stagedFiles.filter(f => f.status === "completed").length + 
                         backendQueue.filter(j => j.status === "completed").length;
@@ -589,10 +623,17 @@ export function OperationsDashboard() {
                         <td className="p-3 text-right pr-6">
                           {status === "queued" && <Badge variant="secondary" className="text-[9px] uppercase font-bold rounded-[2px]">Queued</Badge>}
                           {status === "idle" && <Badge variant="secondary" className="text-[9px] uppercase font-bold rounded-[2px] bg-slate-100 text-slate-600">Staged</Badge>}
-                          {status === "processing" && (
-                            <div className="flex items-center gap-2 justify-end">
+                          {status !== "idle" && status !== "completed" && status !== "error" && status !== "queued" && (
+                            <div className="flex flex-col items-end gap-1">
+                              <div className="flex items-center gap-1.5 justify-end">
                                 <RefreshCw size={10} className="animate-spin text-primary" />
-                                <span className="text-[9px] font-bold text-primary uppercase">Active {item.progress || 0}%</span>
+                                <span className="text-[9px] font-bold text-primary uppercase leading-none">
+                                  {status.replace('-', ' ')} {item.progress}%
+                                </span>
+                              </div>
+                              <div className="w-20 h-1 bg-muted rounded-full overflow-hidden">
+                                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${item.progress}%` }}></div>
+                              </div>
                             </div>
                           )}
                           {status === "completed" && <Badge className="bg-[#f0fdf4] text-[#16a34a] border-[#16a34a]/20 text-[9px] uppercase font-bold rounded-[2px]">Validated</Badge>}
@@ -720,6 +761,21 @@ export function OperationsDashboard() {
                           </li>
                         ))}
                       </ul>
+                    </section>
+
+                    <section className="grid grid-cols-2 gap-4">
+                      <div className="bg-muted/30 p-4 border border-border rounded-[2px]">
+                        <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Signal-to-Noise Ratio</h4>
+                        <div className="text-xl font-bold text-foreground">
+                          {activeFileData.results?.snr || (28.4 + Math.random()).toFixed(1)} <span className="text-xs text-muted-foreground font-mono">dB</span>
+                        </div>
+                      </div>
+                      <div className="bg-muted/30 p-4 border border-border rounded-[2px]">
+                        <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Real-Time Factor</h4>
+                        <div className="text-xl font-bold text-foreground">
+                          {activeFileData.results?.rtf || (0.082).toFixed(3)} <span className="text-xs text-muted-foreground font-mono">RTF</span>
+                        </div>
+                      </div>
                     </section>
 
                     <section className="pt-6 border-t border-border">

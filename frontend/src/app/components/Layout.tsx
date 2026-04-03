@@ -72,8 +72,32 @@ export function Layout() {
   // Shared global states
   const [datasets, setDatasets] = useState<DatasetItem[]>(INITIAL_DATASETS);
   const [activeDatasetId, setActiveDatasetId] = useState<string | null>("ds-001");
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(INITIAL_PREFERENCES);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(() => {
+    const savedMode = localStorage.getItem("asr_app_mode");
+    return {
+      ...INITIAL_PREFERENCES,
+      mode: (savedMode === "live" || savedMode === "demo") ? savedMode : INITIAL_PREFERENCES.mode
+    };
+  });
   const [loading, setLoading] = useState(true);
+
+  // Sync primary color based on mode
+  useEffect(() => {
+    const root = document.documentElement;
+    if (userPreferences.mode === 'demo') {
+      root.style.setProperty('--primary-mode', 'var(--primary-demo)');
+    } else {
+      root.style.setProperty('--primary-mode', 'var(--primary-live)');
+    }
+  }, [userPreferences.mode]);
+
+  // Enforce Login flow if no mode is selected
+  useEffect(() => {
+    if (!localStorage.getItem("asr_app_mode")) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
 
   // Fetch datasets from backend on mount
   useEffect(() => {
@@ -119,7 +143,11 @@ export function Layout() {
   const showDatasetSidebar = !hideSidebarRoutes.includes(location.pathname);
 
   const toggleMode = () => {
-    setUserPreferences(prev => ({ ...prev, mode: prev.mode === 'demo' ? 'live' : 'demo' }));
+    setUserPreferences(prev => {
+      const newMode = prev.mode === 'demo' ? 'live' : 'demo';
+      localStorage.setItem("asr_app_mode", newMode);
+      return { ...prev, mode: newMode };
+    });
   };
 
   return (

@@ -44,22 +44,44 @@ export function TrainingPipeline() {
   const lidVerified = datasets.filter(d => d.lidVerified).length;
   const bothVerified = datasets.filter(d => d.transcriptionVerified && d.lidVerified).length;
 
-  const handleStartRetraining = () => {
+  const handleStartRetraining = async () => {
     if (bothVerified === 0) return;
     setRetrainingStatus("running");
     setTrainingProgress(0);
     
-    // Simulate progress
-    const interval = setInterval(() => {
-      setTrainingProgress(prev => {
-        if (prev >= 100) {
+    try {
+      // Trigger backend optimization
+      const response = await fetch('http://localhost:8000/api/training/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_id: baseModel,
+          target_wer: 1.5, // Mock target
+          config: { learningRate, batchSize, epochs }
+        })
+      });
+      
+      if (!response.ok) throw new Error('Training trigger failed');
+      
+      const data = await response.json();
+      console.log('✅ Optimization response:', data);
+
+      // Simulate progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        setTrainingProgress(progress);
+        
+        if (progress >= 100) {
           clearInterval(interval);
           setRetrainingStatus("done");
-          return 100;
         }
-        return prev + 5;
-      });
-    }, 150);
+      }, 150);
+    } catch (err) {
+      console.error('❌ Error triggering training:', err);
+      setRetrainingStatus("idle");
+      alert("Failed to initiate optimization. Please check if the backend is running.");
+    }
   };
 
   return (
