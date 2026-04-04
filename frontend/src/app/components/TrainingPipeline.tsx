@@ -163,17 +163,26 @@ export function TrainingPipeline() {
                   </p>
                 </div>
                 {ds.transcriptionVerified ? (
-                  <span className="flex items-center gap-1.5 text-xs font-semibold text-[#16a34a]">
-                    <CheckCircle2 size={14} /> Verified
-                  </span>
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-[#16a34a] bg-[#f0fdf4] dark:bg-[#052c16] px-2 py-1 rounded-[2px] border border-[#16a34a]/20">
+                      <CheckCircle2 size={12} /> Approved
+                    </span>
+                    <button 
+                      onClick={() => updateDatasetItem(ds.id, { transcriptionVerified: false })}
+                      className="text-[10px] uppercase font-bold text-muted-foreground hover:text-destructive transition-colors px-2 underline underline-offset-2"
+                      title="Withdraw from training set"
+                    >
+                      Revoke
+                    </button>
+                  </div>
                 ) : (
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity border-border text-primary rounded-[2px]"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity border-border text-primary rounded-[2px] h-8 px-3 text-[11px] font-bold uppercase"
                     onClick={() => updateDatasetItem(ds.id, { transcriptionVerified: true })}
                   >
-                    <CheckCircle2 size={14} className="mr-1" /> Mark Verified
+                    <CheckCircle2 size={14} className="mr-1.5" /> Approve for Training
                   </Button>
                 )}
               </div>
@@ -230,17 +239,26 @@ export function TrainingPipeline() {
                   </div>
                 </div>
                 {ds.lidVerified ? (
-                  <span className="flex items-center gap-1.5 text-xs font-semibold text-[#16a34a]">
-                    <CheckCircle2 size={14} /> Confirmed
-                  </span>
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-[#16a34a] bg-[#f0fdf4] dark:bg-[#052c16] px-2 py-1 rounded-[2px] border border-[#16a34a]/20">
+                      <CheckCircle2 size={12} /> Confirmed
+                    </span>
+                    <button 
+                      onClick={() => updateDatasetItem(ds.id, { lidVerified: false })}
+                      className="text-[10px] uppercase font-bold text-muted-foreground hover:text-primary transition-colors px-2 underline underline-offset-2"
+                      title="Modify identified language"
+                    >
+                      Change
+                    </button>
+                  </div>
                 ) : (
                   <Button
                     size="sm"
                     variant="default"
-                    className="border-primary text-white rounded-[2px] px-6"
+                    className="border-primary text-white rounded-[2px] px-6 h-8 text-[11px] font-bold uppercase tracking-wider"
                     onClick={() => updateDatasetItem(ds.id, { lidVerified: true, verifiedLanguage: ds.verifiedLanguage || ds.detectedLanguage })}
                   >
-                    Confirm
+                    Confirm ID
                   </Button>
                 )}
               </div>

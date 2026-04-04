@@ -49,6 +49,30 @@ async def get_analytics_summary() -> Dict:
     }
 
 
+@router.get("/performance")
+async def get_performance_analytics() -> Dict:
+    """
+    Get deep-dive performance metrics for model comparison.
+    
+    IMPLEMENTATION PLACEHOLDER: 
+    1. Calculate Real-Time Factor (RTF) across models.
+    2. Aggregate WER trends by audio length (0-30s, 30-60s, etc.).
+    3. Monitor GPU utilization telemetry.
+    """
+    return {
+        "performance_metrics": {
+            "average_latency_rtf": 0.082,
+            "average_wer": 4.10,
+            "gpu_load_percent": 74.2
+        },
+        "inference_by_length": [
+            {"length": "0-30s", "whisper": 0.05, "conformer": 0.08, "wav2vec2": 0.12},
+            {"length": "30-60s", "whisper": 0.09, "conformer": 0.11, "wav2vec2": 0.15},
+            {"length": "60s+", "whisper": 0.14, "conformer": 0.18, "wav2vec2": 0.22}
+        ]
+    }
+
+
 @router.post("/evaluations", response_model=EvaluationResult)
 async def create_evaluation(evaluation: EvaluationResult):
     """Create a new evaluation result (mock endpoint)."""

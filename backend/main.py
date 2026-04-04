@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import asr_router, datasets_router, analytics_router, operations_router
+from app.routers import asr_router, datasets_router, analytics_router, operations_router, training_router
 
 app = FastAPI(
     title="ASR Model Evaluation API",
@@ -22,6 +22,7 @@ app.include_router(asr_router)
 app.include_router(datasets_router)
 app.include_router(analytics_router)
 app.include_router(operations_router)
+app.include_router(training_router)
 
 @app.get("/")
 async def root():

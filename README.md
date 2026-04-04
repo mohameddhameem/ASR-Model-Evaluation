@@ -1,142 +1,57 @@
-# ASR Model Evaluation SPA
+# ASR Model Evaluation Platform
 
-Full-stack application for evaluating ASR models.
+A full-stack workbench for the orchestration, validation, and analytics of Global Speech Recognition (ASR) models. This platform provides a technical environment for researchers and operational teams to evaluate model performance across different languages and datasets.
 
-## Setup
+## Getting Started
 
-Requirements: Node.js v24.14.0+, npm v10.0+
-
-**Terminal 1 - Backend:**
+### Backend Services
+The platform supports a dual-server architecture for different stages of development:
+- **FastAPI (Recommended)**: The primary REST API for production-like workflows.
+- **Express (Mock)**: A legacy mock server used for early-stage UI and frontend iteration.
 
 ```bash
+# Start FastAPI Service
 cd backend
-npm install
-npm start
+# (Ensure your Python environment is active)
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Runs on http://localhost:8000
-
-**Terminal 2 - Frontend:**
-
+### Frontend Application
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+The application will be available at: `http://localhost:5173`
 
-Runs on http://localhost:5174
+---
 
-## Verify It's Working
+## Core System Architecture
 
-```bash
-curl http://localhost:8000/health
-curl http://localhost:8000/api/asr/models
-```
+### Environment Isolation
+The system enforces strict boundaries between Live and Demo environments:
+- **Session-Based Selection**: Users specify their environment (Live or Demo) during the authentication process.
+- **Persistence**: To ensure data integrity, the environment context is maintained for the duration of the session. Switching environments requires a full sign-out and re-authentication.
 
-Then visit http://localhost:5174 in your browser.
+### Design and Governance
+- **Institutional UI**: Implemented a design system based on a 2px geometry and a premium color palette (Charcoal/Primary) for a consistent, professional interface.
+- **AI Governance**: A global AI System Disclaimer is integrated into the dashboard to remind users of the nature of AI-generated transcriptions and the necessity of human verification.
+- **Standardized Tokens**: Styling is managed through a central set of CSS variables and design tokens, replacing ad-hoc utility classes.
 
-## API Endpoints
+### Technical Foundation
+- **Type Safety**: The frontend is built on a refactored TypeScript foundation using discriminated unions for reliable data handling.
+- **Centralized Data Management**: All mock data and system constants are managed through a single source of truth to avoid duplication across the platform.
 
-**ASR Models**
+---
 
-- `GET /api/asr/models`
-- `POST /api/asr/models`
-- `PUT /api/asr/models/{model_id}`
-- `DELETE /api/asr/models/{model_id}`
+## Technical Stack
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Shadcn/UI, Lucide, Sonner.
+- **Backend (API)**: FastAPI (Python 3.12+), Pydantic, Uvicorn.
+- **Backend (Mock)**: Node.js, Express.js.
 
-**Datasets**
+---
 
-- `GET /api/datasets`
-- `POST /api/datasets`
-- `PUT /api/datasets/{dataset_id}`
-- `DELETE /api/datasets/{dataset_id}`
-
-**Analytics**
-
-- `GET /api/analytics/evaluations`
-- `GET /api/analytics/summary`
-- `POST /api/analytics/evaluations`
-
-## Features
-
-**Frontend (8 routes)**
-
-- Evaluation Workbench
-- Speech Training
-- Language ID Training
-- Model Analytics
-- Dataset Manager
-- Operations Dashboard
-- Model Retraining
-- Settings
-
-Included: Dark/light theme, CSV export, keyboard shortcuts, analytics charts, advanced filtering.
-
-**Backend**
-
-- 3 mock ASR models
-- 3 mock datasets
-- 3 evaluations with metrics
-- CORS enabled
-
-## Development
-
-```bash
-# Frontend
-cd frontend
-npm run dev       # local dev
-npm run build     # production build
-npm run lint      # check code
-
-# Backend
-cd backend
-npm start         # run server
-```
-
-**Frontend Structure**
-
-- `src/app/components/` - React components
-- `src/app/routes.tsx` - Routes
-- `src/styles/` - CSS
-
-**Backend Structure**
-
-- `server.js` - Express app
-- `data/mockData.js` - Mock data
-
-## Tech Stack
-
-**Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Shadcn/ui, Recharts
-**Backend:** Express.js, Node.js
-
-## Docs
-
-- [Frontend README](./frontend/README.md)
-- [Backend README](./backend/README.md)
-- [QUICKSTART.md](./QUICKSTART.md) - 5-minute setup
-- [DEVELOPMENT.md](./DEVELOPMENT.md) - Development guide
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing guidelines
-
-## Troubleshooting
-
-**Frontend won't start:**
-
-```bash
-cd frontend && rm -r node_modules package-lock.json && npm install && npm run dev
-```
-
-**Backend won't start:**
-
-```bash
-cd backend && rm -r node_modules package-lock.json && npm install && npm start
-```
-
-**Port already in use:**
-
-```bash
-# On Windows, find what's using the port
-netstat -ano | findstr :5174
-netsstat -ano | findstr :8000
-```
-
-3. Review the guidelines in `/guidelines`
+## Documentation
+- [Backend Development](./backend/README.md) - Details on service architecture and port assignments.
+- [Frontend Development](./frontend/README.md) - Information on component structure and design patterns.
+- [Quickstart Guide](./QUICKSTART.md) - A simplified 5-minute setup sequence.

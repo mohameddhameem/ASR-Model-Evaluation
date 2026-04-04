@@ -74,12 +74,22 @@ MOCK_QUEUE = [
 
 @router.get("/queue", response_model=List[ProcessingJob])
 async def get_processing_queue():
-    """Get the current batch processing queue."""
+    """
+    Get the current batch processing queue.
+    
+    IMPLEMENTATION NOTE: The frontend uses the 'status' field to drive 
+    real-time progress bars (e.g., 'processing' with a 'progress' int).
+    """
     return MOCK_QUEUE
 
 @router.get("/details/{job_id}", response_model=ProcessingJob)
 async def get_job_details(job_id: str):
-    """Get the details and segments for a specific job."""
+    """
+    Get the details and segments for a specific job.
+    
+    IMPLEMENTATION NOTE: 'segments' are critical here for the 
+    side-by-side transcription review and speaker diarization UI.
+    """
     job = next((j for j in MOCK_QUEUE if j["job_id"] == job_id), None)
     if job is None:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")

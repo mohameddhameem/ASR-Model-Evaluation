@@ -8,7 +8,12 @@ router = APIRouter(prefix="/api/datasets", tags=["Datasets"])
 
 @router.get("/", response_model=List[Dataset])
 async def list_datasets():
-    """Get all available datasets."""
+    """
+    Get all available datasets.
+    
+    IMPLEMENTATION NOTE: The frontend expects 'duration' in 'MM:SS' format 
+    and 'language' as a 2-letter ISO code (e.g., 'en', 'fr').
+    """
     return get_mock_datasets()
 
 
