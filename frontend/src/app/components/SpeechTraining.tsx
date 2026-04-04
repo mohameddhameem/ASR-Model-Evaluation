@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router";
 import { Play, Pause, Check, X, Save, FileAudio, RotateCcw, Info, Keyboard, CheckCheck, XCircle } from "lucide-react";
 import { Card, Button, Textarea, cn } from "./ui";
-import type { AppContextType } from "./Layout";
+import type { AppContextType } from "../../types";
 
 const mockSegments = [
   { id: 1, start: 0.0, end: 2.5, speaker: "Speaker 0", text: "I feel like this is my second home." },

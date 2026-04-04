@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Search, Filter, UploadCloud, FileAudio, CheckCircle2, Circle } from "lucide-react";
 import { Input, Select, cn } from "./ui";
-import type { DatasetItem } from "./Layout";
+import type { DatasetItem } from "../../types";
 
 interface DatasetSidebarProps {
   datasets: DatasetItem[];

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOutletContext } from "react-router";
 import { BrainCircuit, CheckSquare, Square, PlayCircle, Settings2 } from "lucide-react";
 import { Card, Button, Badge, cn } from "./ui";
-import type { AppContextType } from "./Layout";
+import type { AppContextType } from "../../types";
 
 export function ModelRetraining() {
   const { datasets } = useOutletContext<AppContextType>();

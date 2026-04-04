@@ -28,10 +28,27 @@ export type UserPreferences = {
   enableSampling: boolean;
   temperature: number;
   topP: number;
+  /** Controls whether to use live production API or mock demo data */
+  mode: 'demo' | 'live';
 };
 
 /**
- * Global app context type
+ * Logged-in user identity (shown in header & home dashboard).
+ * Replace with real SSO profile data once MSAL is integrated.
+ */
+export type UserIdentity = {
+  name: string;
+  role: string;
+};
+
+/** Placeholder identity — swap for MSAL account claims on integration */
+export const DEFAULT_USER_IDENTITY: UserIdentity = {
+  name: 'Jane Doe',
+  role: 'AI Researcher',
+};
+
+/**
+ * Global app context type — matches what Layout.tsx provides via Outlet context
  */
 export type AppContextType = {
   datasets: DatasetItem[];

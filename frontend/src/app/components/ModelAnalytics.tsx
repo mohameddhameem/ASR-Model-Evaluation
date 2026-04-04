@@ -30,11 +30,26 @@ const timeSeriesData = [
   { day: "Sun", latency: 0.080, utilization: 65, wer: 3.9 },
 ];
 
+/** Shape of the /api/analytics/performance backend response */
+type AnalyticsBackendData = {
+  performance_metrics?: {
+    average_latency_rtf: number;
+    average_wer: number;
+    gpu_load_percent: number;
+  };
+  inference_by_length?: {
+    length: string;
+    whisper: number;
+    conformer: number;
+    wav2vec2: number;
+  }[];
+};
+
 export function ModelAnalytics() {
   const { theme } = useTheme();
   const [timeRange, setTimeRange] = useState("7d");
   const [selectedModels, setSelectedModels] = useState({ whisper: true, vibeVoice: true, azure: false });
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsBackendData | null>(null);
   const [inferenceData, setInferenceData] = useState(data);
   const [performanceMetrics, setPerformanceMetrics] = useState({
     latency: 0.082, wer: 4.1, gpu_load: 74.2
@@ -60,12 +75,16 @@ export function ModelAnalytics() {
           
           // Update inference data
           if (backendData.inference_by_length) {
-            setInferenceData(backendData.inference_by_length.map((item: any) => ({
-              name: item.length,
-              whisper: item.whisper,
-              vibeVoice: item.conformer,
-              azure: item.wav2vec2
-            })));
+            setInferenceData(
+              (backendData.inference_by_length ?? []).map(
+                ({ length, whisper, conformer, wav2vec2 }: NonNullable<AnalyticsBackendData['inference_by_length']>[number]) => ({
+                  name: length,
+                  whisper,
+                  vibeVoice: conformer,
+                  azure: wav2vec2,
+                })
+              )
+            );
           }
         }
       } catch (error) {

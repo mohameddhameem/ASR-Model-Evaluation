@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router";
 import { UploadCloud, ServerCog, Play, Square, CheckSquare, Layers, Search, Database, FileAudio, Settings2, Filter, AlertCircle, Download, TrendingUp, RefreshCw } from "lucide-react";
 import { Card, Button, Input, Select, Label, cn, Badge } from "./ui";
-import type { AppContextType, DatasetItem } from "./Layout";
+import type { AppContextType, DatasetItem } from "../../types";
+import { MOCK_PROCESSING_QUEUE } from "../../constants/mockData";
+import type { MockProcessingJob } from "../../constants/mockData";
 
 type Segment = {
   id: string;
@@ -34,6 +36,11 @@ type StagedFile = {
   };
 };
 
+/** Narrowing helper: returns true when the item came from the backend queue */
+function isBackendJob(item: StagedFile | MockProcessingJob): item is MockProcessingJob {
+  return 'job_id' in item;
+}
+
 export function OperationsDashboard() {
   const { addDatasetItem, userPreferences } = useOutletContext<AppContextType>();
   
@@ -42,7 +49,7 @@ export function OperationsDashboard() {
   const [globalStatus, setGlobalStatus] = useState<"idle" | "processing" | "completed">("idle");
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [activeResultTab, setActiveResultTab] = useState<"details" | "summary">("details");
-  const [backendQueue, setBackendQueue] = useState<any[]>([]);
+  const [backendQueue, setBackendQueue] = useState<MockProcessingJob[]>([]);
 
   // Filters for left column
   const [dateFilter, setDateFilter] = useState("");
@@ -70,65 +77,8 @@ export function OperationsDashboard() {
         console.warn("Failed to fetch processing queue from backend:", error);
       }
       
-      // Fallback: use mock data
-      const mockQueue = [
-        {
-          job_id: "job-001",
-          filename: "conference-audio-2026-03-15.mp4",
-          language: "en",
-          duration: "12:45",
-          speakers: 3,
-          status: "completed",
-          confidence: 0.92,
-          date: "2026-03-29",
-          upload_time: "2026-03-29T10:30:00Z"
-        },
-        {
-          job_id: "job-002",
-          filename: "meeting-transcription.wav",
-          language: "fr",
-          duration: "8:30",
-          speakers: 2,
-          status: "completed",
-          confidence: 0.88,
-          date: "2026-03-29",
-          upload_time: "2026-03-29T11:15:00Z"
-        },
-        {
-          job_id: "job-003",
-          filename: "interview-segment.mp3",
-          language: "de",
-          duration: "15:20",
-          speakers: 2,
-          status: "processing",
-          confidence: null,
-          date: "2026-03-29",
-          upload_time: "2026-03-29T12:00:00Z"
-        },
-        {
-          job_id: "job-004",
-          filename: "lecture-hall-recording.m4a",
-          language: "zh",
-          duration: "45:00",
-          speakers: 1,
-          status: "completed",
-          confidence: 0.95,
-          date: "2026-03-29",
-          upload_time: "2026-03-29T14:30:00Z"
-        },
-        {
-          job_id: "job-005",
-          filename: "podcast-episode-42.mp3",
-          language: "en",
-          duration: "32:15",
-          speakers: 2,
-          status: "completed",
-          confidence: 0.91,
-          date: "2026-03-29",
-          upload_time: "2026-03-29T16:00:00Z"
-        }
-      ];
-      setBackendQueue(mockQueue);
+      // Fallback: use shared mock constant
+      setBackendQueue(MOCK_PROCESSING_QUEUE);
     };
     
     fetchQueue();
@@ -263,7 +213,11 @@ export function OperationsDashboard() {
     if (selectedStagedIds.size === filteredFiles.length && filteredFiles.length > 0) {
       setSelectedStagedIds(new Set());
     } else {
-      setSelectedStagedIds(new Set(filteredFiles.map(f => f.id)));
+      // Only staged files (not backend jobs) have selectable ids
+      const selectableIds = filteredFiles
+        .filter((f): f is StagedFile => !isBackendJob(f))
+        .map(f => f.id);
+      setSelectedStagedIds(new Set(selectableIds));
     }
   };
 
@@ -301,15 +255,19 @@ export function OperationsDashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const handleSingleFileDownload = (file: any) => {
+  const handleSingleFileDownload = (file: StagedFile | MockProcessingJob | undefined) => {
+    if (!file) return;
+    const isJob = isBackendJob(file);
     const data = {
-      filename: file.name || file.filename,
-      results: file.results || {
-        language: file.language,
-        confidence: file.confidence,
-        duration: file.duration,
-        segments: file.segments
-      },
+      filename: isJob ? file.filename : file.name,
+      results: !isJob && file.results
+        ? file.results
+        : {
+            language: isJob ? file.language : undefined,
+            confidence: isJob ? file.confidence : undefined,
+            duration: isJob ? file.duration : undefined,
+            segments: isJob ? file.segments : undefined,
+          },
       exportedAt: new Date().toISOString()
     };
 
@@ -348,15 +306,17 @@ export function OperationsDashboard() {
     }
   };
 
-  const filteredFiles = [...backendQueue, ...stagedFiles].filter(item => {
+  const filteredFiles: (StagedFile | MockProcessingJob)[] = [...backendQueue, ...stagedFiles].filter(item => {
     // Check Date
     if (dateFilter) {
-      const itemDate = (item.upload_time || item.uploadDate || item.created_at || "").split('T')[0];
+      const itemDate = isBackendJob(item)
+        ? (item.upload_time || "").split('T')[0]
+        : (item.uploadDate || "").split('T')[0];
       if (itemDate !== dateFilter) return false;
     }
     // Check Lang
     if (langFilter !== "all") {
-      const itemLang = item.language || item.results?.language;
+      const itemLang = isBackendJob(item) ? item.language : item.results?.language;
       if (itemLang !== langFilter) return false;
     }
     // Check Status
@@ -372,7 +332,7 @@ export function OperationsDashboard() {
   // Memoized mock summary for selected file
   const activeFileSummary = useMemo(() => {
     if (!activeFileData) return null;
-    const name = activeFileData.name || activeFileData.filename;
+    const name = isBackendJob(activeFileData) ? activeFileData.filename : activeFileData.name;
     return {
       overview: `The audio file "${name}" predominantly contains a professional dialogue focused on technical coordination. The speakers exhibit high clarity with minimal background noise, resulting in a strong confidence score.`,
       keyPoints: [
@@ -385,15 +345,14 @@ export function OperationsDashboard() {
   }, [activeFileId, stagedFiles, backendQueue]);
 
   // Combine backend queue with staged files for display
-  const allFiles = backendQueue;
   const totalFiles = stagedFiles.length + backendQueue.length;
   const processingFiles = stagedFiles.filter(f => f.status !== "idle" && f.status !== "completed" && f.status !== "error").length + 
                          backendQueue.filter(j => j.status === "processing").length;
   const completedFiles = stagedFiles.filter(f => f.status === "completed").length + 
                         backendQueue.filter(j => j.status === "completed").length;
-  const avgConfidence = backendQueue.filter(j => j.confidence !== null).length > 0
-    ? (backendQueue.filter(j => j.confidence !== null).reduce((sum: number, j: any) => sum + j.confidence, 0) / 
-       backendQueue.filter(j => j.confidence !== null).length).toFixed(3)
+  const jobsWithConfidence = backendQueue.filter(j => j.confidence !== null);
+  const avgConfidence = jobsWithConfidence.length > 0
+    ? (jobsWithConfidence.reduce((sum, j) => sum + (j.confidence ?? 0), 0) / jobsWithConfidence.length).toFixed(3)
     : "N/A";
 
   return (
@@ -569,15 +528,14 @@ export function OperationsDashboard() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredFiles.map(item => {
-                    const isJob = 'job_id' in item;
+                    const isJob = isBackendJob(item);
                     const id = isJob ? item.job_id : item.id;
                     const name = isJob ? item.filename : item.name;
                     const status = item.status;
                     const language = isJob ? item.language : (item.results?.language || "auto");
                     const duration = isJob ? item.duration : (item.results?.duration || "-");
-                    const date = item.upload_time || item.uploadDate || item.created_at 
-                      ? new Date(item.upload_time || item.uploadDate || item.created_at).toLocaleDateString()
-                      : "Unknown";
+                    const rawDate = isJob ? item.upload_time : item.uploadDate;
+                    const date = rawDate ? new Date(rawDate).toLocaleDateString() : "Unknown";
                     
                     return (
                       <tr 
@@ -628,11 +586,11 @@ export function OperationsDashboard() {
                               <div className="flex items-center gap-1.5 justify-end">
                                 <RefreshCw size={10} className="animate-spin text-primary" />
                                 <span className="text-[9px] font-bold text-primary uppercase leading-none">
-                                  {status.replace('-', ' ')} {item.progress}%
+                                  {status.replace('-', ' ')} {isJob ? '' : `${item.progress}%`}
                                 </span>
                               </div>
                               <div className="w-20 h-1 bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${item.progress}%` }}></div>
+                                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${isJob ? 100 : item.progress}%` }}></div>
                               </div>
                             </div>
                           )}
@@ -656,14 +614,27 @@ export function OperationsDashboard() {
 
         {/* Right Column: Audio Output Details Table */}
         <Card className="flex-1 flex flex-col min-h-0 border-border bg-white dark:bg-card shadow-sm overflow-hidden rounded-[2px]">
-          {activeFileData && (activeFileData.results || activeFileData.segments) ? (
+          {(() => {
+            // Narrow activeFileData once before JSX
+            const activeIsJob = activeFileData ? isBackendJob(activeFileData) : false;
+            const activeName = activeFileData
+              ? (activeIsJob ? (activeFileData as import('../../constants/mockData').MockProcessingJob).filename : (activeFileData as StagedFile).name)
+              : '';
+            const activeResults = !activeIsJob && activeFileData ? (activeFileData as StagedFile).results : undefined;
+            const activeSegments = activeIsJob && activeFileData ? (activeFileData as import('../../constants/mockData').MockProcessingJob).segments : undefined;
+            const activeConf = activeResults ? activeResults.confidence
+              : activeIsJob && activeFileData ? ((activeFileData as import('../../constants/mockData').MockProcessingJob).confidence ?? 0) : 0;
+            const activeSpeakers = activeResults?.numSpeakers
+              ?? (activeIsJob && activeFileData ? (activeFileData as import('../../constants/mockData').MockProcessingJob).speakers : 2);
+            const hasData = activeFileData && (activeResults || activeSegments);
+            return hasData ? (
             <>
               <div className="p-3 border-b border-border bg-muted/30 shrink-0 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 overflow-hidden">
                     <FileAudio size={18} className="text-primary shrink-0" />
                     <h3 className="text-xs font-bold uppercase tracking-widest text-foreground truncate">
-                      {activeFileData.name || activeFileData.filename}
+                      {activeName}
                     </h3>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -677,7 +648,7 @@ export function OperationsDashboard() {
                       <Download size={14} />
                     </Button>
                     <Badge variant="success" className="font-mono text-[9px] px-2 py-1">
-                      CONF: {activeFileData.results ? (activeFileData.results.confidence * 100).toFixed(0) : (activeFileData.confidence * 100).toFixed(0)}%
+                      CONF: {(activeConf * 100).toFixed(0)}%
                     </Badge>
                   </div>
                 </div>
@@ -722,7 +693,7 @@ export function OperationsDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {(activeFileData.results?.segments || activeFileData.segments || []).map((seg: any) => (
+                      {(activeResults?.segments || activeSegments || []).map((seg) => (
                         <tr key={seg.id} className="hover:bg-muted/10 transition-colors align-top text-[11px]">
                           <td className="p-3 font-mono font-bold text-muted-foreground">{seg.start.toFixed(1)}s</td>
                           <td className="p-3 font-mono font-bold text-muted-foreground">{seg.end.toFixed(1)}s</td>
@@ -767,13 +738,13 @@ export function OperationsDashboard() {
                       <div className="bg-muted/30 p-4 border border-border rounded-[2px]">
                         <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Signal-to-Noise Ratio</h4>
                         <div className="text-xl font-bold text-foreground">
-                          {activeFileData.results?.snr || (28.4 + Math.random()).toFixed(1)} <span className="text-xs text-muted-foreground font-mono">dB</span>
+                          {activeResults?.snr || (28.4 + Math.random()).toFixed(1)} <span className="text-xs text-muted-foreground font-mono">dB</span>
                         </div>
                       </div>
                       <div className="bg-muted/30 p-4 border border-border rounded-[2px]">
                         <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Real-Time Factor</h4>
                         <div className="text-xl font-bold text-foreground">
-                          {activeFileData.results?.rtf || (0.082).toFixed(3)} <span className="text-xs text-muted-foreground font-mono">RTF</span>
+                          {activeResults?.rtf || (0.082).toFixed(3)} <span className="text-xs text-muted-foreground font-mono">RTF</span>
                         </div>
                       </div>
                     </section>
@@ -781,7 +752,7 @@ export function OperationsDashboard() {
                     <section className="pt-6 border-t border-border">
                       <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-4">Engagement Distribution</h4>
                       <div className="space-y-4">
-                        {Array.from({length: activeFileData.results?.numSpeakers || activeFileData.speakers || 2}).map((_, i) => (
+                        {Array.from({length: activeSpeakers ?? 2}).map((_, i) => (
                           <div key={i} className="space-y-1.5">
                             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                               <span>Entity {i}</span>
@@ -801,7 +772,7 @@ export function OperationsDashboard() {
                 )}
               </div>
             </>
-          ) : (
+            ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted/10 opacity-70">
               <div className="bg-white dark:bg-card p-10 rounded-[2px] shadow-sm border border-border max-w-sm w-full text-center">
                 <div className="w-16 h-16 bg-muted text-primary rounded-[2px] flex items-center justify-center mb-6 mx-auto border border-border">
@@ -835,7 +806,8 @@ export function OperationsDashboard() {
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
         </Card>
 
       </div>

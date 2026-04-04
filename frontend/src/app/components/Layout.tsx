@@ -1,42 +1,14 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
-import { Mic, Headphones, BarChart2, Menu, ChevronLeft, Bot, Sun, Moon, Settings as SettingsIcon, User, BrainCircuit, ServerCog, Home } from "lucide-react";
+import { Mic, BarChart2, Menu, ChevronLeft, Bot, Sun, Moon, Settings as SettingsIcon, User, BrainCircuit, ServerCog, Home } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "./ui";
 import { DatasetSidebar } from "./DatasetSidebar";
+import type { DatasetItem, UserPreferences, AppContextType } from "../../types";
+import { DEFAULT_USER_IDENTITY } from "../../types";
 
-export type DatasetItem = {
-  id: string;
-  name: string;
-  url: string;
-  type: string;
-  duration?: string;
-  transcriptionVerified: boolean;
-  lidVerified: boolean;
-  detectedLanguage?: string;
-  verifiedLanguage?: string;
-  uploadDate: string;
-};
-
-export type UserPreferences = {
-  asrModel: string;
-  lidModel: string;
-  contextWords: string;
-  enableSampling: boolean;
-  temperature: number;
-  topP: number;
-  mode: 'demo' | 'live';
-};
-
-export type AppContextType = {
-  datasets: DatasetItem[];
-  addDatasetItem: (item: DatasetItem) => void;
-  updateDatasetItem: (id: string, updates: Partial<DatasetItem>) => void;
-  activeDatasetId: string | null;
-  setActiveDatasetId: (id: string) => void;
-  userPreferences: UserPreferences;
-  updateUserPreferences: (prefs: UserPreferences) => void;
-};
+// Types are now canonical in src/types/index.ts — re-export for backwards compat
+export type { DatasetItem, UserPreferences, AppContextType } from "../../types";
 
 const navItems = [
   { path: "/dashboard", label: "Home", icon: Home, badge: null },
@@ -271,8 +243,8 @@ export function Layout() {
             
             <div className="flex items-center gap-3 pl-1">
               <div className="hidden sm:flex flex-col items-end leading-tight">
-                <span className="text-sm font-semibold text-foreground">Jane Doe</span>
-                <span className="text-xs text-muted-foreground">AI Researcher</span>
+                <span className="text-sm font-semibold text-foreground">{DEFAULT_USER_IDENTITY.name}</span>
+                <span className="text-xs text-muted-foreground">{DEFAULT_USER_IDENTITY.role}</span>
               </div>
               <div className="w-8 h-8 rounded-[2px] bg-secondary border border-border flex items-center justify-center text-primary shadow-sm cursor-pointer">
                 <User size={16} />

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router";
-import { Headphones, Globe, BrainCircuit, CheckCircle2, XCircle, Play, RefreshCw, ArrowRight, Info } from "lucide-react";
+import { Headphones, Globe, BrainCircuit, CheckCircle2, Play, RefreshCw, ArrowRight, Info } from "lucide-react";
 import { Card, Button, Select, Label, cn, Badge } from "./ui";
-import type { AppContextType } from "./Layout";
+import type { AppContextType } from "../../types";
+import { toast } from "sonner";
 
 type PipelineTab = "transcription" | "language-id" | "retraining";
 
@@ -80,7 +81,7 @@ export function TrainingPipeline() {
     } catch (err) {
       console.error('❌ Error triggering training:', err);
       setRetrainingStatus("idle");
-      alert("Failed to initiate optimization. Please check if the backend is running.");
+      toast.error("Failed to initiate optimization. Please check if the backend is running.");
     }
   };
 

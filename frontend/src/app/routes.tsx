@@ -8,6 +8,7 @@ import { DatasetManagerTable } from "./components/DatasetManagerTable";
 import { TrainingPipeline } from "./components/TrainingPipeline";
 import { ModelAnalytics } from "./components/ModelAnalytics";
 import { Settings } from "./components/Settings";
+import { NotFound } from "./components/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -25,7 +26,7 @@ export const router = createBrowserRouter([
       { path: "training", Component: TrainingPipeline },
       { path: "analytics", Component: ModelAnalytics },
       { path: "settings", Component: Settings },
-      { path: "*", Component: () => <div className="p-8 text-center text-slate-400">404 - Not Found</div> },
+      { path: "*", Component: NotFound },
     ],
   },
 ]);

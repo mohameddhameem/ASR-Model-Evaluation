@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOutletContext } from "react-router";
 import { Database, FileAudio, CheckCircle2, Circle, Play, Pause, Search, Download, Trash2, Copy } from "lucide-react";
 import { Card, Button, Badge, Input, cn } from "./ui";
-import type { AppContextType } from "./Layout";
+import type { AppContextType } from "../../types";
 
 export function DatasetManagerTable() {
   const { datasets } = useOutletContext<AppContextType>();

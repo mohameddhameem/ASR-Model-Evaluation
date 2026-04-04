@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router";
 import { Save, Sliders, Cpu, Mic, MessageSquare, Zap } from "lucide-react";
 import { Card, Button, Label, Select, Textarea, cn } from "./ui";
-import type { AppContextType } from "./Layout";
+import type { AppContextType } from "../../types";
 
 export function Settings() {
   const { userPreferences, updateUserPreferences } = useOutletContext<AppContextType>();
@@ -25,18 +25,18 @@ export function Settings() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          <Sliders className="text-indigo-600 dark:text-indigo-400" /> Global Preferences
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <Sliders className="text-primary" /> Global Preferences
         </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure default models and generation parameters used across the platform.</p>
+        <p className="text-sm text-muted-foreground mt-1">Configure default models and generation parameters used across the platform.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Model Preferences */}
         <Card className="p-5 space-y-5">
-          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-            <Cpu size={18} className="text-indigo-500" />
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Model Preferences</h3>
+          <div className="flex items-center gap-2 border-b border-border pb-3">
+            <Cpu size={18} className="text-primary" />
+            <h3 className="font-semibold text-foreground">Model Preferences</h3>
           </div>
 
           <div className="space-y-1.5">
@@ -106,15 +106,15 @@ export function Settings() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>Temperature</Label>
-                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">{prefs.temperature.toFixed(2)}</span>
+                <span className="text-xs text-primary font-medium">{prefs.temperature.toFixed(2)}</span>
               </div>
               <input 
                 type="range" min="0" max="2" step="0.1" 
                 value={prefs.temperature}
                 onChange={(e) => setPrefs({ ...prefs, temperature: parseFloat(e.target.value) })}
-                className="w-full accent-indigo-600 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer" 
+                className="w-full accent-primary h-1.5 bg-muted rounded-lg appearance-none cursor-pointer" 
               />
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+              <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
                 <span>0.0 (Deterministic)</span>
                 <span>2.0 (Random)</span>
               </div>
@@ -123,15 +123,15 @@ export function Settings() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>Top-p</Label>
-                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">{prefs.topP.toFixed(2)}</span>
+                <span className="text-xs text-primary font-medium">{prefs.topP.toFixed(2)}</span>
               </div>
               <input 
                 type="range" min="0" max="1" step="0.05" 
                 value={prefs.topP}
                 onChange={(e) => setPrefs({ ...prefs, topP: parseFloat(e.target.value) })}
-                className="w-full accent-indigo-600 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer" 
+                className="w-full accent-primary h-1.5 bg-muted rounded-lg appearance-none cursor-pointer" 
               />
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+              <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
                 <span>0.0</span>
                 <span>1.0</span>
               </div>
@@ -141,9 +141,9 @@ export function Settings() {
 
         {/* Application Mode */}
         <Card className="p-5 space-y-5">
-          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-            <Zap size={18} className="text-indigo-500" />
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Application Mode</h3>
+          <div className="flex items-center gap-2 border-b border-border pb-3">
+            <Zap size={18} className="text-primary" />
+            <h3 className="font-semibold text-foreground">Application Mode</h3>
           </div>
 
           <div className="space-y-4">
@@ -153,19 +153,19 @@ export function Settings() {
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-lg border transition-all text-left",
                   prefs.mode === 'demo'
-                    ? "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 ring-1 ring-indigo-500/20"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    ? "bg-secondary border-border ring-1 ring-primary/20"
+                    : "bg-background border-border hover:border-muted-foreground/30"
                 )}
               >
                 <div className={cn(
                   "mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0",
-                  prefs.mode === 'demo' ? "border-indigo-600 bg-indigo-600" : "border-slate-300 dark:border-slate-600"
+                  prefs.mode === 'demo' ? "border-primary bg-primary" : "border-muted-foreground/40"
                 )}>
                   {prefs.mode === 'demo' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Demo Mode</div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Perfect for exploring features and showing the platform to others with mock data.</p>
+                  <div className="text-sm font-semibold text-foreground">Demo Mode</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Perfect for exploring features and showing the platform to others with mock data.</p>
                 </div>
               </button>
 
@@ -174,19 +174,19 @@ export function Settings() {
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-lg border transition-all text-left",
                   prefs.mode === 'live'
-                    ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 ring-1 ring-rose-500/20"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    ? "bg-destructive/5 border-destructive/30 ring-1 ring-destructive/20"
+                    : "bg-background border-border hover:border-muted-foreground/30"
                 )}
               >
                 <div className={cn(
                   "mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0",
-                  prefs.mode === 'live' ? "border-rose-600 bg-rose-600" : "border-slate-300 dark:border-slate-600"
+                  prefs.mode === 'live' ? "border-destructive bg-destructive" : "border-muted-foreground/40"
                 )}>
                   {prefs.mode === 'live' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Live Mode</div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Connect to production APIs and process real-time audio streams (Demo data used currently).</p>
+                  <div className="text-sm font-semibold text-foreground">Live Mode</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Connect to production APIs and process real-time audio streams (Demo data used currently).</p>
                 </div>
               </button>
             </div>
@@ -194,7 +194,7 @@ export function Settings() {
         </Card>
       </div>
 
-      <div className="flex items-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+      <div className="flex items-center gap-4 pt-4 border-t border-border">
         <Button onClick={handleSave} className="px-6">
           <Save size={16} className="mr-2" /> Save Preferences
         </Button>

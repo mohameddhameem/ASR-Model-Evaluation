@@ -3,7 +3,7 @@ import { useOutletContext } from "react-router";
 import { Play, Square, Code, AlignLeft, ListMusic, Timer, RefreshCw, Settings2, RotateCcw, CheckCircle, Database, FileAudio, Info } from "lucide-react";
 import { Card, Button, Label, Select, Textarea, cn } from "./ui";
 import { AudioWaveform } from "./AudioWaveform";
-import type { AppContextType } from "./Layout";
+import type { AppContextType } from "../../types";
 
 type Segment = {
   id: number;

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router";
 import { Play, Pause, Save, Globe2, AlertCircle, CheckCircle2, Download, RotateCcw, Check } from "lucide-react";
 import { Card, Button, Select, Badge, cn } from "./ui";
-import type { AppContextType } from "./Layout";
+import type { AppContextType } from "../../types";
 
 const LANGUAGES = [
   { value: "en", label: "English" },
@@ -268,7 +268,9 @@ export function LanguageIdTraining() {
                       </Select>
                       
                       {!row.lidVerified && (
-                        <AlertCircle size={16} className="text-amber-500 shrink-0" title="Requires verification" />
+                        <span title="Requires verification">
+                          <AlertCircle size={16} className="text-amber-500 shrink-0" />
+                        </span>
                       )}
                     </div>
                   </td>
