@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
-import { Mic, BarChart2, Menu, ChevronLeft, Bot, Sun, Moon, Settings as SettingsIcon, User, BrainCircuit, ServerCog, Home } from "lucide-react";
+import { Mic, BarChart2, Menu, ChevronLeft, Bot, Sun, Moon, Settings as SettingsIcon, User, BrainCircuit, ServerCog, Home, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "./ui";
@@ -114,12 +114,9 @@ export function Layout() {
   const hideSidebarRoutes = ["/operations", "/datasets", "/analytics", "/retraining", "/language-id", "/settings", "/dashboard", "/training"];
   const showDatasetSidebar = !hideSidebarRoutes.includes(location.pathname);
 
-  const toggleMode = () => {
-    setUserPreferences(prev => {
-      const newMode = prev.mode === 'demo' ? 'live' : 'demo';
-      localStorage.setItem("asr_app_mode", newMode);
-      return { ...prev, mode: newMode };
-    });
+  const handleLogout = () => {
+    localStorage.removeItem("asr_app_mode");
+    navigate("/login");
   };
 
   return (
@@ -216,20 +213,18 @@ export function Layout() {
           
           {/* User & Settings Panel */}
           <div className="flex items-center gap-4">
-            {/* Mode Indicator — clickable to toggle */}
-            <button
-              onClick={toggleMode}
-              title={`Click to switch to ${userPreferences.mode === 'demo' ? 'Live' : 'Demo'} mode`}
+              {/* Mode Indicator — now read-only */}
+            <div
               className={cn(
-                "hidden md:flex items-center gap-1.5 px-3 py-1 rounded-[2px] text-[10px] font-bold tracking-[0.1em] uppercase border cursor-pointer transition-all hover:shadow-sm",
+                "hidden md:flex items-center gap-1.5 px-3 py-1 rounded-[2px] text-[10px] font-bold tracking-[0.1em] uppercase border shadow-sm",
                 userPreferences.mode === 'demo' 
-                  ? "bg-secondary text-primary border-primary/20 hover:bg-muted" 
-                  : "bg-red-50 dark:bg-red-900/30 text-primary border-primary/20 hover:bg-red-100 dark:hover:bg-red-900/50"
+                  ? "bg-secondary text-primary border-primary/20" 
+                  : "bg-red-50 dark:bg-red-900/30 text-primary border-primary/20"
               )}
             >
               <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
               {userPreferences.mode} MODE
-            </button>
+            </div>
 
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -259,6 +254,14 @@ export function Layout() {
               >
                 <SettingsIcon size={18} />
               </button>
+              
+              <button 
+                onClick={handleLogout}
+                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors rounded-[2px]"
+                title="Log Out & Switch Mode"
+              >
+                <LogOut size={18} />
+              </button>
             </div>
           </div>
         </header>
@@ -271,7 +274,8 @@ export function Layout() {
             activeDatasetId, 
             setActiveDatasetId,
             userPreferences,
-            updateUserPreferences: setUserPreferences
+            updateUserPreferences: setUserPreferences,
+            onLogout: handleLogout
           } satisfies AppContextType} />
         </div>
       </main>

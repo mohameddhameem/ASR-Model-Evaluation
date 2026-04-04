@@ -58,6 +58,7 @@ export type AppContextType = {
   setActiveDatasetId: (id: string) => void;
   userPreferences: UserPreferences;
   updateUserPreferences: (prefs: UserPreferences) => void;
+  onLogout: () => void;
 };
 
 /**

@@ -5,7 +5,7 @@ import { Card, Button, Label, Select, Textarea, cn } from "./ui";
 import type { AppContextType } from "../../types";
 
 export function Settings() {
-  const { userPreferences, updateUserPreferences } = useOutletContext<AppContextType>();
+  const { userPreferences, updateUserPreferences, onLogout } = useOutletContext<AppContextType>();
   
   // Local state for the form so we can edit before saving
   const [prefs, setPrefs] = useState(userPreferences);
@@ -139,57 +139,37 @@ export function Settings() {
           </div>
         </Card>
 
-        {/* Application Mode */}
+        {/* Application Mode - Read Only */}
         <Card className="p-5 space-y-5">
-          <div className="flex items-center gap-2 border-b border-border pb-3">
-            <Zap size={18} className="text-primary" />
-            <h3 className="font-semibold text-foreground">Application Mode</h3>
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <div className="flex items-center gap-2">
+              <Zap size={18} className="text-primary" />
+              <h3 className="font-semibold text-foreground">Application Mode</h3>
+            </div>
+            <div className={cn(
+              "px-2 py-0.5 rounded-[2px] text-[10px] font-bold uppercase tracking-wider border",
+              userPreferences.mode === 'demo' ? "bg-secondary text-primary border-primary/20" : "bg-red-50 text-primary border-primary/20"
+            )}>
+              {userPreferences.mode}
+            </div>
           </div>
 
           <div className="space-y-4">
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => setPrefs({ ...prefs, mode: 'demo' })}
-                className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg border transition-all text-left",
-                  prefs.mode === 'demo'
-                    ? "bg-secondary border-border ring-1 ring-primary/20"
-                    : "bg-background border-border hover:border-muted-foreground/30"
-                )}
-              >
-                <div className={cn(
-                  "mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0",
-                  prefs.mode === 'demo' ? "border-primary bg-primary" : "border-muted-foreground/40"
-                )}>
-                  {prefs.mode === 'demo' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-foreground">Demo Mode</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Perfect for exploring features and showing the platform to others with mock data.</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setPrefs({ ...prefs, mode: 'live' })}
-                className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg border transition-all text-left",
-                  prefs.mode === 'live'
-                    ? "bg-destructive/5 border-destructive/30 ring-1 ring-destructive/20"
-                    : "bg-background border-border hover:border-muted-foreground/30"
-                )}
-              >
-                <div className={cn(
-                  "mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0",
-                  prefs.mode === 'live' ? "border-destructive bg-destructive" : "border-muted-foreground/40"
-                )}>
-                  {prefs.mode === 'live' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-foreground">Live Mode</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Connect to production APIs and process real-time audio streams (Demo data used currently).</p>
-                </div>
-              </button>
-            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The application is currently operating in <span className="font-bold uppercase text-foreground">{userPreferences.mode}</span> context. 
+              To maintain session integrity, mode changes require a secure re-authentication.
+            </p>
+            
+            <button
+              onClick={() => {
+                if (window.confirm("You will be logged out to switch authentication environments. Continue?")) {
+                  onLogout();
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 p-3 text-xs font-bold uppercase tracking-widest border border-border bg-background hover:bg-muted transition-colors rounded-[2px]"
+            >
+              Sign Out & Switch Mode
+            </button>
           </div>
         </Card>
       </div>

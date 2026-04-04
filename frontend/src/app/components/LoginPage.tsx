@@ -137,14 +137,19 @@ export function LoginPage() {
           </div>
 
           <div className={cn(
-            "p-5 text-sm rounded-[2px] border transition-colors duration-500",
+            "p-5 text-[11px] rounded-[2px] border transition-colors duration-500 space-y-2",
             mode === "live" 
               ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400" 
               : "bg-white dark:bg-card border-border text-muted-foreground"
           )}>
-            {mode === "live" 
-              ? "WARNING: You are about to authenticate into the live production environment. Executed tasks will consume actual API credits and modify production metadata."
-              : "Sandbox Mode is active. You are free to explore UI functionalities using non-destructive simulated APIs and mock datasets."}
+            <div className="font-bold uppercase tracking-wider">
+              {mode === "live" ? "Production Protocol" : "Sandbox Protocol"}
+            </div>
+            <p className="leading-relaxed">
+              {mode === "live" 
+                ? "You are activating the live production environment. Executed tasks will consume API credits and modify production metadata. This choice will persist until you sign out." 
+                : "Sandbox Mode is active. You are free to explore UI functionalities using simulated APIs and mock datasets. This choice will persist until you sign out."}
+            </p>
           </div>
 
           {/* SSO LOGIN BUTTON */}
