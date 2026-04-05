@@ -17,6 +17,7 @@ interface AudioWaveformProps {
   className?: string;
   activeSegmentId?: number | null;
   zoom?: number; // 1 to 10
+  showSentiment?: boolean;
 }
 
 export function AudioWaveform({
@@ -27,6 +28,7 @@ export function AudioWaveform({
   className,
   activeSegmentId,
   zoom = 1,
+  showSentiment = true,
 }: AudioWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +43,17 @@ export function AudioWaveform({
       // Create some pseudo-random but somewhat continuous peaks
       const val = 0.2 + 0.6 * Math.abs(Math.sin(i * 0.05) * Math.cos(i * 0.01) + Math.random() * 0.2);
       data.push(Math.min(val, 1));
+    }
+    return data;
+  }, []);
+  
+  const sentimentData = useMemo(() => {
+    const numPoints = 100;
+    const data = [];
+    for (let i = 0; i < numPoints; i++) {
+        // Mock sentiment: 0.5 is neutral, 1.0 is positive, 0.0 is negative
+        const val = 0.5 + 0.3 * Math.sin(i * 0.15) + (Math.random() - 0.5) * 0.1;
+        data.push(Math.max(0, Math.min(1, val)));
     }
     return data;
   }, []);
@@ -143,6 +156,32 @@ export function AudioWaveform({
         ctx.font = '10px Inter, sans-serif';
         ctx.fillStyle = '#6366f1';
         ctx.fillText(hoverTime.toFixed(2) + 's', hoverX + 5, 12);
+    }
+
+    // Draw sentiment line
+    if (showSentiment) {
+        ctx.beginPath();
+        ctx.setLineDash([2, 2]);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.5)'; // Positive/Neutral green-ish
+        
+        const points = sentimentData;
+        const step = width / (points.length - 1);
+        
+        for (let i = 0; i < points.length; i++) {
+            const x = i * step;
+            // Map sentiment 0-1 to height range (top part of waveform)
+            const y = (height * 0.2) + (1 - points[i]) * (height * 0.3);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Label for sentiment
+        ctx.font = '700 8px sans-serif';
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.8)';
+        ctx.fillText('SENTIMENT OVERLAY', 4, height - 18);
     }
   };
 

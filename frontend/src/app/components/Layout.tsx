@@ -11,11 +11,12 @@ import { DEFAULT_USER_IDENTITY } from "../../types";
 export type { DatasetItem, UserPreferences, AppContextType } from "../../types";
 
 const navItems = [
-  { path: "/dashboard", label: "Home", icon: Home, badge: null },
-  { path: "/", label: "Workbench", icon: Mic, badge: "Single" },
-  { path: "/operations", label: "Batch Ops", icon: ServerCog, badge: "Batch" },
-  { path: "/training", label: "Training", icon: BrainCircuit, badge: null },
-  { path: "/analytics", label: "Analytics", icon: BarChart2, badge: null },
+  { path: "/app/dashboard", label: "Home", icon: Home, badge: null },
+  { path: "/app", label: "Workbench", icon: Mic, badge: "Single" },
+  { path: "/app/operations", label: "Batch Ops", icon: ServerCog, badge: "Batch" },
+  { path: "/app/training", label: "Training", icon: BrainCircuit, badge: null },
+  { path: "/app/live", label: "Live Sandbox", icon: Mic, badge: "New" },
+  { path: "/app/analytics", label: "Analytics", icon: BarChart2, badge: null },
 ];
 
 const INITIAL_DATASETS: DatasetItem[] = [
@@ -66,7 +67,7 @@ export function Layout() {
   // Enforce Login flow if no mode is selected
   useEffect(() => {
     if (!localStorage.getItem("asr_app_mode")) {
-      navigate("/login");
+      navigate("/");
     }
   }, [navigate]);
 
@@ -111,12 +112,12 @@ export function Layout() {
     setDatasets((prev) => prev.map(d => d.id === id ? { ...d, ...updates } : d));
   };
 
-  const hideSidebarRoutes = ["/operations", "/datasets", "/analytics", "/retraining", "/language-id", "/settings", "/dashboard", "/training"];
-  const showDatasetSidebar = !hideSidebarRoutes.includes(location.pathname);
+  const hideSidebarRoutes = ["/app/operations", "/app/datasets", "/app/analytics", "/app/retraining", "/app/language-id", "/app/settings", "/app/dashboard", "/app/training"];
+  const showDatasetSidebar = location.pathname === "/app" || location.pathname === "/app/";
 
   const handleLogout = () => {
     localStorage.removeItem("asr_app_mode");
-    navigate("/login");
+    navigate("/");
   };
 
   return (
@@ -245,10 +246,10 @@ export function Layout() {
                 <User size={16} />
               </div>
               <button 
-                onClick={() => navigate("/settings")}
+                onClick={() => navigate("/app/settings")}
                 className={cn(
                   "p-1.5 transition-colors rounded-[2px]", 
-                  location.pathname === "/settings" ? "text-primary bg-secondary" : "text-muted-foreground hover:text-foreground"
+                  location.pathname === "/app/settings" ? "text-primary bg-secondary" : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Settings"
               >

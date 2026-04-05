@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router";
-import { Play, Square, Code, AlignLeft, ListMusic, Timer, RefreshCw, Settings2, RotateCcw, CheckCircle, Database, FileAudio, Info } from "lucide-react";
+import { Play, Square, Code, AlignLeft, ListMusic, Timer, RefreshCw, Settings2, RotateCcw, CheckCircle, Database, FileAudio, Info, Zap } from "lucide-react";
 import { Card, Button, Label, Select, Textarea, cn } from "./ui";
 import { AudioWaveform } from "./AudioWaveform";
 import type { AppContextType } from "../../types";
@@ -36,6 +36,7 @@ export function EvaluationWorkbench() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [hasResults, setHasResults] = useState(true);
   const [segments, setSegments] = useState<Segment[]>(initialSegments);
+  const [latencyThreshold, setLatencyThreshold] = useState(250);
   
   // Retrigger & Verification states
   const [isRetriggerPanelOpen, setIsRetriggerPanelOpen] = useState(false);
@@ -299,6 +300,20 @@ export function EvaluationWorkbench() {
                   className="w-full accent-primary h-1.5 bg-muted rounded-[2px] appearance-none cursor-pointer" 
                 />
               </div>
+
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <div className="flex justify-between items-center">
+                  <Label className="flex items-center gap-1.5"><Zap size={12} className="text-yellow-500" /> Eager EOT Threshold</Label>
+                  <span className="text-xs text-primary font-bold">{latencyThreshold}ms</span>
+                </div>
+                <input 
+                  type="range" min="100" max="1000" step="10" 
+                  value={latencyThreshold}
+                  onChange={(e) => setLatencyThreshold(parseInt(e.target.value))}
+                  className="w-full accent-primary h-1.5 bg-muted rounded-[2px] appearance-none cursor-pointer" 
+                />
+                <p className="text-[10px] text-muted-foreground leading-tight">Lower values reduce response delay but may cut off speech.</p>
+              </div>
             </div>
           </div>
         </Card>
@@ -476,14 +491,14 @@ export function EvaluationWorkbench() {
               <ListMusic size={16} /> Audio Segments
             </button>
             <button
-              onClick={() => setActiveTab("translation")}
-              className={cn(
-                "px-4 py-2 text-sm font-medium rounded-[2px] flex items-center gap-2 transition-all",
-                activeTab === "translation" ? "bg-white dark:bg-card text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground hover:bg-white/50"
-              )}
-            >
-              <AlignLeft size={16} /> Translation & Summary
-            </button>
+               onClick={() => setActiveTab("translation")}
+               className={cn(
+                 "px-4 py-2 text-sm font-medium rounded-[2px] flex items-center gap-2 transition-all",
+                 activeTab === "translation" ? "bg-white dark:bg-card text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground hover:bg-white/50"
+               )}
+             >
+               <AlignLeft size={16} /> Translation & Summary
+             </button>
           </div>
 
           <div className="p-4 flex-1 bg-white dark:bg-card rounded-b-[2px]">
@@ -609,12 +624,24 @@ export function EvaluationWorkbench() {
                       ) : (
                         <div className={cn("grid gap-4", comparisonMode ? "grid-cols-2" : "grid-cols-1")}>
                           <div className={cn("space-y-1.5", comparisonMode && "p-2 bg-muted/20 border border-border rounded-[2px]")}>
-                            {comparisonMode && <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Baseline (VibeVoice)</span>}
-                            <p className={cn(
-                              "text-sm leading-relaxed transition-colors",
-                              activeSegmentId === seg.id ? "text-foreground" : "text-foreground/80"
-                            )}>{seg.text}</p>
-                          </div>
+                             {comparisonMode && <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">Baseline (VibeVoice)</span>}
+                             <p className={cn(
+                               "text-sm leading-relaxed transition-colors",
+                               activeSegmentId === seg.id ? "text-foreground" : "text-foreground/80"
+                             )}>
+                                {seg.text.split(' ').map((word, idx) => (
+                                  <span 
+                                    key={idx} 
+                                    className={cn(
+                                      idx % 7 === 0 && idx !== 0 ? "border-b border-dotted border-red-400" : ""
+                                    )}
+                                    title={idx % 7 === 0 && idx !== 0 ? "Low confidence (approx. 84%)" : "High confidence"}
+                                  >
+                                    {word}{' '}
+                                  </span>
+                                ))}
+                             </p>
+                           </div>
                           
                           {comparisonMode && seg.comparisonText && (
                             <div className="space-y-1.5 p-2 bg-primary/[0.03] border border-primary/20 rounded-[2px] animate-in fade-in slide-in-from-right-2">

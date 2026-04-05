@@ -15,7 +15,7 @@ export function LoginPage() {
     
     // Simulate SSO Login
     setTimeout(() => {
-      navigate("/dashboard");
+      navigate("/app/dashboard");
     }, 1200);
   };
 

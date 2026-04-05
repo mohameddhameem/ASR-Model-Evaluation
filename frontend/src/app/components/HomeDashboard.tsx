@@ -14,7 +14,7 @@ const recentJobs = [
 
 const quickActions = [
   {
-    to: "/",
+    to: "/app",
     icon: Mic,
     title: "Single File Analysis",
     desc: "Deep-dive into one audio file — edit transcriptions, review segments, inspect waveforms.",
@@ -22,7 +22,7 @@ const quickActions = [
     tag: "Technical"
   },
   {
-    to: "/operations",
+    to: "/app/operations",
     icon: ServerCog,
     title: "Batch Processing",
     desc: "Upload multiple files, run them through the ASR pipeline, and export results in bulk.",
@@ -30,7 +30,7 @@ const quickActions = [
     tag: "Operations"
   },
   {
-    to: "/training",
+    to: "/app/training",
     icon: GraduationCap,
     title: "Training Pipeline",
     desc: "Verify transcriptions, confirm language IDs, and trigger fine-tuning jobs for your models.",
@@ -38,7 +38,7 @@ const quickActions = [
     tag: "Advanced"
   },
   {
-    to: "/analytics",
+    to: "/app/analytics",
     icon: BarChart2,
     title: "Model Analytics",
     desc: "Compare model performance, track WER trends, and monitor GPU utilization over time.",
@@ -191,7 +191,7 @@ export function HomeDashboard() {
                 </span>
               </div>
             ))}
-            <Link to="/operations" className="flex items-center justify-center gap-1.5 p-3 text-xs font-semibold text-primary hover:bg-secondary transition-colors">
+            <Link to="/app/operations" className="flex items-center justify-center gap-1.5 p-3 text-xs font-semibold text-primary hover:bg-secondary transition-colors">
               View all batch jobs <ArrowRight size={12} />
             </Link>
           </Card>

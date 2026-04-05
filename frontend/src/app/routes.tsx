@@ -8,15 +8,16 @@ import { DatasetManagerTable } from "./components/DatasetManagerTable";
 import { TrainingPipeline } from "./components/TrainingPipeline";
 import { ModelAnalytics } from "./components/ModelAnalytics";
 import { Settings } from "./components/Settings";
+import { LiveSandbox } from "./components/LiveSandbox";
 import { NotFound } from "./components/NotFound";
 
 export const router = createBrowserRouter([
   {
-    path: "/login",
+    path: "/",
     Component: LoginPage,
   },
   {
-    path: "/",
+    path: "/app",
     Component: Layout,
     children: [
       { index: true, Component: EvaluationWorkbench },
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { path: "datasets", Component: DatasetManagerTable },
       { path: "training", Component: TrainingPipeline },
       { path: "analytics", Component: ModelAnalytics },
+      { path: "live", Component: LiveSandbox },
       { path: "settings", Component: Settings },
       { path: "*", Component: NotFound },
     ],
